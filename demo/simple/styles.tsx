@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 // import { desaturate } from 'polished';
 import { IBaseStyledProps } from 'ide-lib-base-component';
-import { ILibEngineProps } from './index';
+import { ILibEngineProps } from './main';
 
 interface IStyledProps extends ILibEngineProps, IBaseStyledProps {}
 

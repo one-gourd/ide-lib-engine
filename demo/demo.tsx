@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { render } from 'react-dom';
-import { LibEngine, LibEngineFactory, ILibEngineProps } from '../src/';
+import { LibEngine, LibEngineFactory, ILibEngineProps } from './simple/main';
 import { Collapse } from 'antd';
 const Panel = Collapse.Panel;
 

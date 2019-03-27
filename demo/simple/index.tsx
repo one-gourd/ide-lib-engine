@@ -3,9 +3,9 @@ import { Button } from 'antd';
 import { IBaseTheme, IBaseComponentProps } from 'ide-lib-base-component';
 
 import { StyledContainer } from './styles';
-import { TComponentCurrying, initSuits } from './component';
-import { configLibEngine, ESubApps, CONTROLLED_KEYS } from './config';
-import { LibEngineModel } from './model';
+import {
+  TComponentCurrying,
+} from '../../src';
 
 export interface ISubComponents {}
 
@@ -71,26 +71,3 @@ export const LibEngineCurrying: TComponentCurrying<
   );
 };
 
-const {
-  NormalComponent: LibEngine,
-  ComponentHOC: LibEngineHOC,
-  ComponentAddStore: LibEngineAddStore,
-  ComponentFactory: LibEngineFactory
-} = initSuits({
-  ComponentCurrying: LibEngineCurrying,
-  className: configLibEngine.basic.className,
-  solution: configLibEngine.component.solution,
-  defaultProps: DEFAULT_PROPS,
-  subComponents: ESubApps,
-  controlledKeys: CONTROLLED_KEYS,
-  ComponentModel: LibEngineModel,
-  subAppCreators: {},
-  idPrefix: configLibEngine.store.idPrefix
-});
-
-export {
-  LibEngine,
-  LibEngineHOC,
-  LibEngineAddStore,
-  LibEngineFactory
-}

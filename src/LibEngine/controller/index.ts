@@ -1,15 +1,13 @@
 import Application from 'ette';
+import Router from 'ette-router';
 
 import { IGeneralStores } from '../schema/stores';
-import { router as GetRouter } from '../router/get';
-import { router as PostRouter } from '../router/post';
-import { router as PutRouter } from '../router/put';
-import { router as DelRouter } from '../router/del';
 import { debugIO } from '../../lib/debug';
 
 export const createApp = function(
-    stores: IGeneralStores,
-  innerApps: Record<string, Application> = {}
+  stores: IGeneralStores,
+  routers: Router[],
+  innerApps: Record<string, Application> = {},
 ) {
   const app = new Application({ domain: 'lib-engine' });
   app.innerApps = innerApps; // 新增 innerApps 的挂载
@@ -30,10 +28,8 @@ export const createApp = function(
   });
 
   // 注册路由
-  app.use(GetRouter.routes());
-  app.use(PostRouter.routes());
-  app.use(PutRouter.routes());
-  app.use(DelRouter.routes());
-
+  routers.forEach((router: Router) => {
+    app.use(router.routes());
+  });
   return app;
 };

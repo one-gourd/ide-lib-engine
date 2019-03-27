@@ -1,17 +1,14 @@
-import { types, Instance } from 'mobx-state-tree';
-import {
-  stringLiterals,
-  TBaseControlledKeys,
-  BASE_CONTROLLED_KEYS,
-  ElementType
-} from 'ide-lib-base-component';
-import { LibEngine, DEFAULT_PROPS, ILibEngineProps } from './index';
+import { types } from 'mobx-state-tree';
+import { BASE_CONTROLLED_KEYS } from 'ide-lib-base-component';
+
+import { DEFAULT_PROPS, ILibEngineProps } from '.';
 import { showConsole } from './solution';
-import { IStoresModel } from './schema/stores';
+import { IStoresModel, IComponentConfig } from '../../src';
 
-import { IComponentConfig } from './interface';
-
-export enum ESubApps {}
+import { router as GetRouter } from './router/get';
+import { router as PostRouter } from './router/post';
+import { router as PutRouter } from './router/put';
+import { router as DelRouter } from './router/del';
 
 export const configLibEngine: IComponentConfig<
   ILibEngineProps,
@@ -21,23 +18,24 @@ export const configLibEngine: IComponentConfig<
     className: 'LibEngine'
   },
   component: {
-    subject: LibEngine,
     solution: {
       onClick: [showConsole]
     },
     defaultProps: DEFAULT_PROPS,
-    subComponents: {
-      // normal:{},
+    subsConfig: {
+      normal: {},
       addStore: {}
     }
   },
-  router: {
-    domain: 'ide-engine'
+  routers: {
+    domain: 'ide-engine',
+    list: [GetRouter, PostRouter, PutRouter, DelRouter]
   },
   store: {
     idPrefix: 'sle'
   },
   model: {
+    controlledKeys: [], // 后续再初始化
     props: {
       visible: types.optional(types.boolean, true),
       text: types.optional(types.string, '')
@@ -53,13 +51,13 @@ export const configLibEngine: IComponentConfig<
   }
 };
 
-export const SELF_CONTROLLED_KEYS = stringLiterals('visible', 'text');
+// 枚举受 store 控制的 key，一般来自 config.model.props 中 key
+// 当然也可以自己枚举
+export const SELF_CONTROLLED_KEYS = Object.keys(configLibEngine.model.props); // ['visible', 'text']
 
 export const CONTROLLED_KEYS = BASE_CONTROLLED_KEYS.concat(
   SELF_CONTROLLED_KEYS
 );
 
-// 获取被 store 控制的 model key 的列表，
-export type TControlledKeys =
-  | ElementType<typeof SELF_CONTROLLED_KEYS>
-  | TBaseControlledKeys;
+// 初始化 controlledKeys
+configLibEngine.model.controlledKeys = CONTROLLED_KEYS;

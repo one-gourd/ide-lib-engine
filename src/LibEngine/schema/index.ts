@@ -36,7 +36,7 @@ const createSetMethods = function(
 export const createModelFromConfig: (
   className: string,
   modelProps: Record<string, IAnyType>,
-  controlledKeys: string | string[]
+  controlledKeys: string[]
 ) => IAnyModelType = (className, modelProps, controlledKeys) => {
   return BaseModel.named(`${className}Model`)
     .props(modelProps)
@@ -57,7 +57,7 @@ export const createModelFromConfig: (
     .actions(self => {
       return {
         updateAttribute(name: string, value: any) {
-          return updateModelAttribute(self, name, value);
+          return updateModelAttribute(controlledKeys)(self, name, value);
         }
       };
     });

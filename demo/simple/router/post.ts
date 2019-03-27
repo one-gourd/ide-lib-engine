@@ -2,9 +2,9 @@ import Router from 'ette-router';
 import { buildNormalResponse } from 'ide-lib-base-component';
 
 import { IContext } from './helper';
-import { createModel } from '../schema/util';
+import { createModel } from '../../../src';
 
-import { LibEngineModel } from '../model';
+import { LibEngineModel } from '../main';
 
 export const router = new Router();
 

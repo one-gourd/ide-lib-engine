@@ -5,7 +5,6 @@ import {
   IAnyModelInstance
 } from 'ide-lib-base-component';
 
-import { SELF_CONTROLLED_KEYS } from '../config';
 import { IAnyModelType } from 'mobx-state-tree';
 
 /**
@@ -39,6 +38,8 @@ export function createEmptyModel(ComponentModel: IAnyModelType) {
 ----------------------------------------------------- */
 
 // 定义 menu 可更新信息的属性
-const EDITABLE_ATTRIBUTE = BASE_CONTROLLED_KEYS.concat(SELF_CONTROLLED_KEYS);
 
-export const updateModelAttribute = updateInScope(EDITABLE_ATTRIBUTE);
+export const updateModelAttribute = (selfControlledKeys: string[]) => {
+  const EDITABLE_ATTRIBUTE = BASE_CONTROLLED_KEYS.concat(selfControlledKeys);
+  return updateInScope(EDITABLE_ATTRIBUTE);
+};

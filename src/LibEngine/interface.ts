@@ -1,9 +1,5 @@
-import { middlewareFunction } from 'ette';
-import {
-  TAnyFunction,
-  IProxyRule,
-  IStoresEnv,
-} from 'ide-lib-base-component';
+import Router from 'ette-router';
+import { TAnyFunction, IProxyRule, IStoresEnv } from 'ide-lib-base-component';
 import { IAnyType } from 'mobx-state-tree';
 
 export interface IComponentConfig<Props, StoreModel> {
@@ -11,26 +7,28 @@ export interface IComponentConfig<Props, StoreModel> {
     className: string;
   };
   component: {
-    subject: React.FunctionComponent;
+    // subject: React.FunctionComponent;
     solution: Record<string, TAnyFunction[]>;
     defaultProps: Props;
-    subComponents: {
-        addStore: Record<
-            string,
-            (storesEnv: IStoresEnv<StoreModel>) => React.FunctionComponent<Props>
-        >;
+    subsConfig: {
+      normal: Record<string, React.FunctionComponent<Props>>;
+      addStore: Record<
+        string,
+        (storesEnv: IStoresEnv<StoreModel>) => React.FunctionComponent<Props>
+      >;
     };
   };
-  router: {
+  routers: {
     domain: string;
     proxies?: IProxyRule | IProxyRule[];
-    routes?: middlewareFunction[];
+    list?: Router[];
   };
 
   store: {
     idPrefix: string;
   };
   model: {
+    controlledKeys: string[];
     props: Record<string, IAnyType>;
   };
 }

@@ -1,5 +1,6 @@
 import React from 'react';
-import { IAnyModelType } from 'mobx-state-tree';
+import Router from 'ette-router';
+import { IAnyModelType, IAnyType } from 'mobx-state-tree';
 import { observer } from 'mobx-react-lite';
 import { pick } from 'ide-lib-utils';
 import {
@@ -13,6 +14,7 @@ import {
 import { debugRender } from '../lib/debug';
 import { createApp } from './controller/index';
 import { StoresFactory, TSubAppCreator } from './schema/stores';
+import { createModelFromConfig } from './schema/index';
 
 /* ----------------------------------------------------
     以下是专门配合 store 时的组件版本
@@ -24,6 +26,7 @@ import { StoresFactory, TSubAppCreator } from './schema/stores';
 export const createStoresEnv = (
   ComponentModel: IAnyModelType,
   subAppCreators: TSubAppCreator,
+  routers: Router[],
   idPrefix: string
 ) => {
   const { stores, innerApps } = StoresFactory(
@@ -31,7 +34,7 @@ export const createStoresEnv = (
     subAppCreators,
     idPrefix
   ); // 创建 stores
-  const app = createApp(stores, innerApps); // 创建 controller，并挂载 model
+  const app = createApp(stores, routers, innerApps); // 创建 controller，并挂载 model
   return {
     stores,
     app,
@@ -69,10 +72,14 @@ export interface ISuitsConfig<Props, ISubComponents> {
   solution: Record<string, TAnyFunction[]>;
   defaultProps: Props;
   idPrefix: string;
-  subComponents: ISubComponents;
+  subsConfig: {
+    normal: ISubComponents;
+    addStore: ISubComponents;
+  };
+  modelProps: Record<string, IAnyType>;
   controlledKeys: string[];
-  ComponentModel: IAnyModelType;
   subAppCreators: TSubAppCreator;
+  routers: Router[];
 }
 
 /**
@@ -86,16 +93,15 @@ export const initSuits = <Props, ISubComponents>(
     ComponentCurrying,
     className,
     defaultProps,
-    subComponents,
+    subsConfig,
     controlledKeys,
-    ComponentModel,
+    modelProps,
     solution,
     idPrefix,
+    routers,
     subAppCreators
   } = suitConfig;
   // 创建普通的函数
-  const NormalComponent = ComponentCurrying(subComponents);
-  NormalComponent.displayName = 'className';
 
   // 创建 ComponentHOC
   const ComponentHOC = createComponentHOC(
@@ -104,12 +110,15 @@ export const initSuits = <Props, ISubComponents>(
     defaultProps
   );
 
+  const NormalComponent = ComponentHOC(subsConfig.normal);
+  NormalComponent.displayName = `${className}`;
+
   // 创建 ComponentAddStore
   const ComponentAddStore: (
     storesEnv: any
   ) => React.FunctionComponent<typeof defaultProps> = storesEnv => {
     const { stores } = storesEnv;
-    const ComponentHasSubStore = ComponentHOC(subComponents);
+    const ComponentHasSubStore = ComponentHOC(subsConfig.addStore);
 
     // 创建 ComponentWithStore
     const ComponentWithStore = (
@@ -143,12 +152,24 @@ export const initSuits = <Props, ISubComponents>(
     return observer(ComponentWithStore);
   };
 
+  // 创建 LibEngine 数据模型
+  const ComponentModel = createModelFromConfig(
+    className,
+    modelProps,
+    controlledKeys
+  );
+
   /**
    * 工厂函数，每调用一次就获取一副 MVC
    * 用于隔离不同的 ComponentWithStore 的上下文
    */
   const ComponentFactory = () => {
-    const storesEnv = createStoresEnv(ComponentModel, subAppCreators, idPrefix);
+    const storesEnv = createStoresEnv(
+      ComponentModel,
+      subAppCreators,
+      routers,
+      idPrefix
+    );
     return {
       ...storesEnv,
       ComponentWithStore: ComponentAddStore(storesEnv)
@@ -156,6 +177,7 @@ export const initSuits = <Props, ISubComponents>(
   };
 
   return {
+    ComponentModel,
     NormalComponent,
     ComponentHOC,
     ComponentAddStore,
