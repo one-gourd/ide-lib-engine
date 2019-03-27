@@ -4,11 +4,11 @@ import { Row, Col, Button } from 'antd';
 import { wInfo } from '../../../.storybook/utils';
 import mdGet from './get.md';
 
-import { LibEngineFactory } from '../../../src';
+import { LibEngineFactory } from '../../../demo/simple/main';
 import { modelPropsGen } from '../../helper';
 
 const {
-  LibEngineWithStore: LibEngineWithStore1,
+  ComponentWithStore: LibEngineWithStore1,
   client: client1
 } = LibEngineFactory();
 
@@ -31,10 +31,14 @@ const getInfo = (client, filter) => () => {
   client.get(`/model?${query}`).then(res => {
     const { status, body } = res;
     if (status === 200) {
-      attributes = body.attributes;
+      attributes = body.data.attributes;
     }
 
-    document.getElementById('info').innerText = JSON.stringify(attributes, null, 4);
+    document.getElementById('info').innerText = JSON.stringify(
+      attributes,
+      null,
+      4
+    );
   });
 };
 
@@ -51,7 +55,7 @@ storiesOf('API - get', module)
   .addWithJSX('/model 获取属性信息', () => {
     return (
       <Row style={styles.demoWrap}>
-        <Row type="flex" justify="space-between" align="top">       
+        <Row type="flex" justify="space-between" align="top">
           <Col span={10} offset={2}>
             <Button onClick={getInfo(client1)}>获取信息</Button>
             <Button onClick={getInfo(client1, ['styles', 'visible'])}>

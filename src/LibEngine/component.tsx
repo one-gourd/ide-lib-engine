@@ -15,6 +15,7 @@ import { debugRender } from '../lib/debug';
 import { createApp } from './controller/index';
 import { StoresFactory, TSubAppCreator } from './schema/stores';
 import { createModelFromConfig } from './schema/index';
+let modelId = 1;
 
 /* ----------------------------------------------------
     以下是专门配合 store 时的组件版本
@@ -156,8 +157,13 @@ export const initSuits = <Props, ISubComponents>(
   const ComponentModel = createModelFromConfig(
     className,
     modelProps,
-    controlledKeys
+    controlledKeys,
+    modelId++
   );
+
+  // 给 model 随身带上 _defaultProps 属性，让初始化 model 的时候，view 和 model 数据保持一致
+  // 否则默认创建的 model 中的 `style`、`theme` 属性都是空对象
+  (ComponentModel as any)['_defaultProps'] = defaultProps;
 
   /**
    * 工厂函数，每调用一次就获取一副 MVC

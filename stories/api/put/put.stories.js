@@ -4,10 +4,10 @@ import { Row, Col, Input, Button, Select } from 'antd';
 import { wInfo } from '../../../.storybook/utils';
 import mdPut from './put.md';
 
-import { LibEngineFactory } from '../../../src';
+import { LibEngineFactory } from '../../../demo/simple/main';
 import { modelPropsGen } from '../../helper';
 
-const { LibEngineWithStore, client } = LibEngineFactory();
+const { ComponentWithStore, client } = LibEngineFactory();
 
 const { Option } = Select;
 const styles = {
@@ -34,7 +34,6 @@ function handleChange(value) {
   selectedAttrName = value;
 }
 
-
 function updateAttr() {
   if (!selectedAttrName) {
     document.getElementById('info').innerText = '请选择要更改的属性';
@@ -52,7 +51,7 @@ function updateAttr() {
         client.get(`/model`).then(res => {
           const { status, body } = res;
           if (status === 200) {
-            const attributes = body.attributes || {};
+            const attributes = body.data.attributes || {};
             document.getElementById('info').innerText =
               `更新操作：; \n` + JSON.stringify(attributes, null, 4);
           }
@@ -70,7 +69,7 @@ storiesOf('API - put', module)
   .addWithJSX('/model 更改属性', () => {
     return (
       <Row style={styles.demoWrap}>
-        <Row type="flex" justify="space-between" align="top"> 
+        <Row type="flex" justify="space-between" align="top">
           <Col span={10} offset={2}>
             <Row>
               <Col span={6}>
@@ -91,16 +90,14 @@ storiesOf('API - put', module)
                 <Button onClick={createNew(client)}>随机创建</Button>
               </Col>
             </Row>
-
           </Col>
           <Col span={12}>
             <div id="info" />
           </Col>
-        
         </Row>
 
         <Col span={24}>
-          <LibEngineWithStore onClick={onClick} />
+          <ComponentWithStore onClick={onClick} />
         </Col>
       </Row>
     );

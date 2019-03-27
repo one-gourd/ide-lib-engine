@@ -5,18 +5,18 @@ import { Row, Col, Input, Button } from 'antd';
 import { wInfo } from '../../../.storybook/utils';
 import mdDel from './del.md';
 
-import { LibEngineFactory } from '../../../src';
+import { LibEngineFactory } from '../../../demo/simple/main';
 import { modelPropsGen } from '../../helper';
 
 const {
-  LibEngineWithStore: LibEngineWithStore1,
+  ComponentWithStore: LibEngineWithStore1,
   client: client1
 } = LibEngineFactory();
 
 const styles = {
   demoWrap: {
     display: 'flex',
-    'flexDirection': 'column',
+    flexDirection: 'column',
     width: '100%'
   }
 };
@@ -28,7 +28,7 @@ const createNew = client => () => {
 
 const resetSchema = client => () => {
   client.del('/model');
-}
+};
 
 function onClick(value) {
   console.log('当前值：', value);
@@ -39,8 +39,7 @@ storiesOf('API - del', module)
   .addWithJSX('/model 重置', () => {
     return (
       <Row style={styles.demoWrap}>
-
-        <Row type="flex" justify="space-between" align="top">        
+        <Row type="flex" justify="space-between" align="top">
           <Col span={10} offset={2}>
             <Row>
               <Col span={20}>

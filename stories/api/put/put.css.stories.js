@@ -4,10 +4,10 @@ import { Row, Col, Input, Button, Select } from 'antd';
 import { wInfo } from '../../../.storybook/utils';
 import mdPut from './put.md';
 
-import { LibEngineFactory } from '../../../src';
+import { LibEngineFactory } from '../../../demo/simple/main';
 import { modelPropsGen } from '../../helper';
 
-const { LibEngineWithStore, client } = LibEngineFactory();
+const { ComponentWithStore, client } = LibEngineFactory();
 
 const { Option } = Select;
 const styles = {
@@ -26,7 +26,6 @@ const createNew = client => () => {
   const model = modelPropsGen();
   client.post('/model', { model: model });
 };
-
 
 let selectedTarget = '';
 
@@ -55,7 +54,7 @@ function updateCss() {
         client.get(`/model?filter=styles`).then(res => {
           const { status, body } = res;
           if (status === 200) {
-            const attributes = body.attributes || {};
+            const attributes = body.data.attributes || {};
             document.getElementById('info').innerText =
               `更新操作：${result.success} - ${result.message}; \n` +
               JSON.stringify(attributes, null, 4);
@@ -75,9 +74,7 @@ storiesOf('API - put', module)
     return (
       <Row style={styles.demoWrap}>
         <Col span={24}>
-          <LibEngineWithStore
-            onClick={onClick}
-          />
+          <ComponentWithStore onClick={onClick} />
         </Col>
         <Row type="flex" justify="space-between" align="top">
           <Col span={10} offset={2}>

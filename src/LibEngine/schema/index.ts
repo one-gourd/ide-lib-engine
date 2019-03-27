@@ -1,4 +1,4 @@
-import { Instance, IAnyModelType, IAnyType } from 'mobx-state-tree';
+import { types, Instance, IAnyType, IAnyModelType } from 'mobx-state-tree';
 
 import { pick, capitalize } from 'ide-lib-utils';
 import {
@@ -8,6 +8,7 @@ import {
 } from 'ide-lib-base-component';
 
 import { updateModelAttribute } from './util';
+import { debugModel } from '../../lib/debug';
 
 const createSetMethods = function(
   modelInstance: IAnyModelInstance,
@@ -25,7 +26,7 @@ const createSetMethods = function(
         };
       } else if (typeName === 'boolean') {
         result[fnName] = function name(val: string | boolean) {
-          modelInstance[propName] = val;
+          modelInstance[propName] = val === 'true' || val === true;
         };
       }
     }
@@ -36,10 +37,18 @@ const createSetMethods = function(
 export const createModelFromConfig: (
   className: string,
   modelProps: Record<string, IAnyType>,
-  controlledKeys: string[]
-) => IAnyModelType = (className, modelProps, controlledKeys) => {
-  return BaseModel.named(`${className}Model`)
-    .props(modelProps)
+  controlledKeys: string[],
+  modelId: number
+) => IAnyModelType = (className, modelProps, controlledKeys, modelId) => {
+  return BaseModel.named(`${className}Model${modelId}`)
+    .props({
+      id: types.refinement(
+        types.identifier,
+        (identifier: string) =>
+          identifier.indexOf(`${className}Model${modelId}_`) === 0
+      ),
+      ...modelProps
+    })
     .views(self => {
       return {
         /**
@@ -57,6 +66,11 @@ export const createModelFromConfig: (
     .actions(self => {
       return {
         updateAttribute(name: string, value: any) {
+          debugModel(
+            `[updateAttribute] 将要更新 ${
+            self.id
+            } 中属性 ${name} 值为 ${value}; (control keys: ${controlledKeys})`
+          );
           return updateModelAttribute(controlledKeys)(self, name, value);
         }
       };

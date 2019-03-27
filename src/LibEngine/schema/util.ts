@@ -7,6 +7,7 @@ import {
 
 import { IAnyModelType } from 'mobx-state-tree';
 
+let mId = 1;
 /**
  * 将普通对象转换成 Model
  * @param modelObject - 普通的对象
@@ -14,12 +15,16 @@ import { IAnyModelType } from 'mobx-state-tree';
 export function createModel<Props extends IBaseComponentProps>(
   ComponentModel: IAnyModelType,
   modelObject: Props,
-  defaultProps?: Props
+  // 使用 `_defaultProps` 对象，让 model 和 view 数据保持一致
+  defaultProps: Props = (ComponentModel as any)['_defaultProps']
 ): IAnyModelInstance {
   const mergedProps = Object.assign({}, defaultProps || {}, modelObject);
   const { theme, styles, ...otherProps } = mergedProps;
 
-  const model = ComponentModel.create(otherProps);
+  const model = ComponentModel.create({
+    id: `${ComponentModel.name}_${mId++}`,
+    ...otherProps
+  });
   model.setStyles(styles || {});
   model.setTheme(theme);
 
