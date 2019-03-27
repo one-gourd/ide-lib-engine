@@ -1,11 +1,11 @@
 import Application from 'ette';
 import Router from 'ette-router';
 
-import { IGeneralStores } from '../schema/stores';
+import { IStoresModel } from '../schema/stores';
 import { debugIO } from '../../lib/debug';
 
 export const createApp = function(
-  stores: IGeneralStores,
+  stores: IStoresModel,
   routers: Router[],
   innerApps: Record<string, Application> = {},
 ) {

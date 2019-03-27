@@ -1,14 +1,14 @@
 import { message } from 'antd';
 // import { getValueByPath } from 'ide-lib-utils';
 import { IStoresEnv } from 'ide-lib-base-component';
-import { IGeneralStores } from '../../schema/stores';
+import { IStoresModel } from '../../../../src';
 // import { RPATH } from '../../router/helper'
 
 /**
  * 显示 list 列表项
  * @param env - IStoresEnv
  */
-export const showConsole = (env: IStoresEnv<IGeneralStores>) => async (key: string, keyPath: Array<string>, item: any) => {
+export const showConsole = (env: IStoresEnv<IStoresModel>) => async (key: string, keyPath: Array<string>, item: any) => {
     const { stores, client } = env;
     console.log(777, key);
     // stores.model.setVisible(true); // 可见
