@@ -16,7 +16,7 @@ const propsNormal = {
   text: ''
 };
 const propsModel = createModel(LibEngineModel, propsNormal);
-const stores = createStores(LibEngineModel, 'custom_le');
+// const stores = createStores(LibEngineModel, 'custom_le');
 
 function onClick(value) {
   console.log('当前值：', value);

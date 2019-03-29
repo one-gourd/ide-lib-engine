@@ -8,7 +8,8 @@ import {
 import {
   TAnyMSTModel,
   IStoresEnv,
-  getSubAppsFromFactoryMap
+  getSubAppsFromFactoryMap,
+  getSubStoresAssigner
 } from 'ide-lib-base-component';
 
 import { createEmptyModel } from './util';
@@ -19,34 +20,52 @@ export const FACTORY_SUBAPP: Record<
   (...args: any[]) => Partial<IStoresEnv<TAnyMSTModel>>
 > = {};
 
-export type TSubAppCreator = Record<
-  string,
-  (...args: any[]) => Partial<IStoresEnv<TAnyMSTModel>>
->;
+export type TFactoryFunction = (
+  ...args: any[]
+) => Partial<IStoresEnv<TAnyMSTModel>>;
+
+export type TSubFactoryMap = Record<string, TFactoryFunction>;
 
 function getPrefix(idPrefix: string) {
   return `${idPrefix || 'unset'}_`;
 }
 
-export function createStores(ComponentModel: IAnyModelType, idPrefix: string) {
-  return types
-    .model('StoresModel', {
+export function createStores(
+  ComponentModel: IAnyModelType,
+  idPrefix: string,
+  // TODO: 这里的 sub 里的 string，替换成 ESubNames 枚举值
+  subStoresModelMap: Record<string, TAnyMSTModel> // 子 store Model 对象，不是 stores 实例
+) {
+  const subNames = Object.keys(subStoresModelMap); // 获取子名字
+
+  // 根据是否有子子组件配置，决定是否将 subStoresModelMap 注入到 store props 中
+  const storeProps = Object.assign(
+    {},
+    {
       id: types.refinement(
         types.identifier,
         (identifier: string) => identifier.indexOf(getPrefix(idPrefix)) === 0
       ),
       model: ComponentModel
-    })
-    .actions(self => {
-      return {
-        setModel(model: SnapshotOrInstance<typeof self.model>) {
-          self.model = cast(model);
-        },
-        resetToEmpty() {
-          self.model = createEmptyModel(ComponentModel);
-        }
-      };
-    });
+    },
+    subNames.length ? subStoresModelMap : {}
+  );
+
+  return types.model('StoresModel', storeProps).actions(self => {
+    // 子 stores 的 assign 方法，比如 setSchemaTree 方法
+    const assignerInjected = subNames.length
+      ? getSubStoresAssigner(self, subNames)
+      : {};
+    return {
+      setModel(model: SnapshotOrInstance<typeof self.model>) {
+        self.model = cast(model);
+      },
+      ...assignerInjected,
+      resetToEmpty() {
+        self.model = createEmptyModel(ComponentModel);
+      }
+    };
+  });
 }
 
 export type TStoresModel = ReturnType<typeof createStores>;
@@ -66,11 +85,12 @@ const cachedStoresMap = new Map<
  */
 export function StoresFactory(
   ComponentModel: IAnyModelType,
-  subAppFactories: TSubAppCreator,
-  idPrefix: string
+  idPrefix: string,
+  subAppFactoryMap: TSubFactoryMap,
+  subStoresModelMap: Record<string, TAnyMSTModel>
 ) {
   const { subStores, subApps, subClients } = getSubAppsFromFactoryMap(
-    subAppFactories || {}
+    subAppFactoryMap || {}
   );
 
   /* ----------------------------------------------------
@@ -79,7 +99,7 @@ export function StoresFactory(
     （提高性能，如果是相同的 Model，不需要重复创建 Stores 对象）
 ----------------------------------------------------- */
   const cached = cachedStoresMap.get(ComponentModel.name) || {
-    store: createStores(ComponentModel, idPrefix),
+    store: createStores(ComponentModel, idPrefix, subStoresModelMap),
     autoId: 0
   };
 

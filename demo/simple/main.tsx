@@ -15,13 +15,14 @@ const {
   ComponentFactory: LibEngineFactory
 } = initSuits({
   ComponentCurrying: LibEngineCurrying,
-  className: configLibEngine.basic.className,
+  className: configLibEngine.component.className,
   solution: configLibEngine.component.solution,
   defaultProps: configLibEngine.component.defaultProps,
-  subsConfig: configLibEngine.component.subsConfig,
+  subComponents: configLibEngine.component.children,
   controlledKeys: configLibEngine.model.controlledKeys,
   modelProps: configLibEngine.model.props,
-  subAppCreators: {},
+  subFactoryMap: {},
+  subStoresModelMap:{},
   idPrefix: configLibEngine.store.idPrefix,
   routers: configLibEngine.routers.list
 });

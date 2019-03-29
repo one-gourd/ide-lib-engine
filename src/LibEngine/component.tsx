@@ -2,19 +2,24 @@ import React from 'react';
 import Router from 'ette-router';
 import { IAnyModelType, IAnyType } from 'mobx-state-tree';
 import { observer } from 'mobx-react-lite';
-import { pick } from 'ide-lib-utils';
+import { pick, invariant } from 'ide-lib-utils';
 import {
   based,
   Omit,
   useInjectedEvents,
   addModelChangeListener,
-  TAnyFunction
+  TAnyFunction,
+  IStoresEnv,
+  extracSubEnv,
+  TAnyMSTModel
 } from 'ide-lib-base-component';
 
 import { debugRender } from '../lib/debug';
 import { createApp } from './controller/index';
-import { StoresFactory, TSubAppCreator } from './schema/stores';
+import { StoresFactory, TSubFactoryMap } from './schema/stores';
 import { createModelFromConfig } from './schema/index';
+import { IComponentConfig } from './interface';
+
 let modelId = 1;
 
 /* ----------------------------------------------------
@@ -26,14 +31,16 @@ let modelId = 1;
  */
 export const createStoresEnv = (
   ComponentModel: IAnyModelType,
-  subAppCreators: TSubAppCreator,
+  subFactoryMap: TSubFactoryMap,
+  subStoresModelMap: Record<string, TAnyMSTModel>,
   routers: Router[],
   idPrefix: string
 ) => {
   const { stores, innerApps } = StoresFactory(
     ComponentModel,
-    subAppCreators,
-    idPrefix
+    idPrefix,
+    subFactoryMap,
+    subStoresModelMap
   ); // 创建 stores
   const app = createApp(stores, routers, innerApps); // 创建 controller，并挂载 model
   return {
@@ -45,62 +52,70 @@ export const createStoresEnv = (
 };
 
 // 用户自定义的组件，必须有 subComponents 这个入参 Props
-export type TComponentCurrying<Props, ISubComponents> = (
-  subComponents: ISubComponents
+export type TComponentCurrying<Props> = (
+  subComponents:
+    | Record<string, React.FunctionComponent<Props>>
+    | Record<
+        string,
+        (storesEnv: IStoresEnv<TAnyMSTModel>) => React.FunctionComponent<Props>
+      >
 ) => React.FunctionComponent<Props>;
 
 /**
  * 使用高阶组件打造的组件生成器
  * @param subComponents - 子组件列表
  */
-const createComponentHOC: <Props, ISubComponents>(
-  ComponentCurrying: TComponentCurrying<Props, ISubComponents>,
+const createComponentHOC: <Props>(
+  ComponentCurrying: TComponentCurrying<Props>,
   className: string,
   defaultProps: Props
-) => (subComponents: ISubComponents) => React.FunctionComponent<Props> = (
-  ComponentCurrying,
-  className,
-  defaultProps
-) => subComponents => {
+) => (
+  subComponents:
+    | Record<string, React.FunctionComponent<Props>>
+    | Record<
+        string,
+        (storesEnv: IStoresEnv<TAnyMSTModel>) => React.FunctionComponent<Props>
+      >
+) => any = (ComponentCurrying, className, defaultProps) => subComponents => {
   const ResultComponent = ComponentCurrying(subComponents);
   ResultComponent.displayName = `${className}HOC`;
   return observer(based(observer(ResultComponent), defaultProps));
 };
 
-export interface ISuitsConfig<Props, ISubComponents> {
-  ComponentCurrying: TComponentCurrying<Props, ISubComponents>;
+export interface ISuitsConfig<Props, SubProps> {
+  ComponentCurrying: TComponentCurrying<Props>;
   className: string;
   solution: Record<string, TAnyFunction[]>;
   defaultProps: Props;
   idPrefix: string;
-  subsConfig: {
-    normal: ISubComponents;
-    addStore: ISubComponents;
-  };
+  subComponents: Record<string, IComponentConfig<Props, SubProps>>;
   modelProps: Record<string, IAnyType>;
   controlledKeys: string[];
-  subAppCreators: TSubAppCreator;
+  subFactoryMap: TSubFactoryMap;
+  subStoresModelMap: Record<string, TAnyMSTModel>;
   routers: Router[];
 }
 
 /**
  * 科里化创建 ComponentWithStore 组件
+ * TODO: 这里替换 any 返回值
  * @param stores - store 模型实例
  */
-export const initSuits = <Props, ISubComponents>(
-  suitConfig: ISuitsConfig<Props, ISubComponents>
-) => {
+export const initSuits: <Props, SubProps>(
+  suitConfig: ISuitsConfig<Props, SubProps>
+) => any = suitConfig => {
   const {
     ComponentCurrying,
     className,
     defaultProps,
-    subsConfig,
+    subComponents,
     controlledKeys,
     modelProps,
     solution,
     idPrefix,
     routers,
-    subAppCreators
+    subFactoryMap,
+    subStoresModelMap
   } = suitConfig;
   // 创建普通的函数
 
@@ -111,7 +126,24 @@ export const initSuits = <Props, ISubComponents>(
     defaultProps
   );
 
-  const NormalComponent = ComponentHOC(subsConfig.normal);
+  // 构造 normal 组件集合
+  const normalComponents: Record<
+    string,
+    React.FunctionComponent<typeof defaultProps>
+  > = {};
+
+  Object.values(subComponents).map(subComponent => {
+    invariant(
+      !!subComponent.className,
+      `[NormalComponent] ${
+        subComponent.className
+      } 配置项中缺少 'className' 字段，无法生成子组件`
+    );
+    normalComponents[subComponent.className] = subComponent.normal;
+  });
+  console.log(111, className, normalComponents);
+
+  const NormalComponent = ComponentHOC(normalComponents);
   NormalComponent.displayName = `${className}`;
 
   // 创建 ComponentAddStore
@@ -119,7 +151,27 @@ export const initSuits = <Props, ISubComponents>(
     storesEnv: any
   ) => React.FunctionComponent<typeof defaultProps> = storesEnv => {
     const { stores } = storesEnv;
-    const ComponentHasSubStore = ComponentHOC(subsConfig.addStore);
+
+    const addStoreComponents: Record<
+      string,
+      React.FunctionComponent<typeof defaultProps>
+    > = {};
+
+    Object.values(subComponents).map(subComponent => {
+      invariant(
+        !!subComponent.namedAs,
+        `[ComponentAddStore] ${
+          subComponent.className
+        } 配置项中缺少 'namedAs' 字段，无法生成带 Store 状态的组件`
+      );
+      addStoreComponents[subComponent.className] = subComponent.addStore(
+        extracSubEnv(storesEnv, subComponent.namedAs)
+      );
+    });
+
+    console.log(222, className, addStoreComponents);
+
+    const ComponentHasSubStore = ComponentHOC(addStoreComponents);
 
     // 创建 ComponentWithStore
     const ComponentWithStore = (
@@ -172,7 +224,8 @@ export const initSuits = <Props, ISubComponents>(
   const ComponentFactory = () => {
     const storesEnv = createStoresEnv(
       ComponentModel,
-      subAppCreators,
+      subFactoryMap,
+      subStoresModelMap,
       routers,
       idPrefix
     );

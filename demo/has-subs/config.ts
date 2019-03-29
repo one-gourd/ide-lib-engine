@@ -1,26 +1,28 @@
 import { types } from 'mobx-state-tree';
 import { BASE_CONTROLLED_KEYS } from 'ide-lib-base-component';
 
-import { DEFAULT_PROPS, ILibEngineProps } from '.';
+import { IStoresModel, IModuleConfig } from '../../src';
+import { DEFAULT_PROPS, IHeaderBlockProps } from '.';
 import { showConsole } from './solution';
-import { IModuleConfig } from '../../src';
+
+import { subComponents, TSubProps } from './subs';
 
 import { router as GetRouter } from './router/get';
 import { router as PostRouter } from './router/post';
 import { router as PutRouter } from './router/put';
 import { router as DelRouter } from './router/del';
 
-export const configLibEngine: IModuleConfig<ILibEngineProps, never> = {
+export const configHeaderBlock: IModuleConfig<IHeaderBlockProps, TSubProps> = {
   component: {
-    className: 'LibEngine',
+    className: 'HeaderBlock',
     solution: {
       onClick: [showConsole]
     },
     defaultProps: DEFAULT_PROPS,
-    children: {}
+    children: subComponents
   },
   routers: {
-    domain: 'ide-engine',
+    domain: 'header-block',
     list: [GetRouter, PostRouter, PutRouter, DelRouter]
   },
   store: {
@@ -45,11 +47,11 @@ export const configLibEngine: IModuleConfig<ILibEngineProps, never> = {
 
 // 枚举受 store 控制的 key，一般来自 config.model.props 中 key
 // 当然也可以自己枚举
-export const SELF_CONTROLLED_KEYS = Object.keys(configLibEngine.model.props); // ['visible', 'text']
+export const SELF_CONTROLLED_KEYS = Object.keys(configHeaderBlock.model.props); // ['visible', 'text']
 
 export const CONTROLLED_KEYS = BASE_CONTROLLED_KEYS.concat(
   SELF_CONTROLLED_KEYS
 );
 
 // 初始化 controlledKeys
-configLibEngine.model.controlledKeys = CONTROLLED_KEYS;
+configHeaderBlock.model.controlledKeys = CONTROLLED_KEYS;
