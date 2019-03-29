@@ -23,6 +23,8 @@ const onClickWithStore = (client) => (value) => {
     name: 'text',
     value: `gggg${Math.random()}`.slice(0, 8)
   });
+
+  client.put('/clients/headerBar/headerbar', { name: 'logo', value: 'https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png'});
 }
 
 const props: ILibEngineProps = {

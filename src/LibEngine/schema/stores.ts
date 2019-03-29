@@ -14,17 +14,7 @@ import {
 
 import { createEmptyModel } from './util';
 
-// 定义子 facotry 映射关系
-export const FACTORY_SUBAPP: Record<
-  string,
-  (...args: any[]) => Partial<IStoresEnv<TAnyMSTModel>>
-> = {};
-
-export type TFactoryFunction = (
-  ...args: any[]
-) => Partial<IStoresEnv<TAnyMSTModel>>;
-
-export type TSubFactoryMap = Record<string, TFactoryFunction>;
+import { TSubFactoryMap } from '../interface';
 
 function getPrefix(idPrefix: string) {
   return `${idPrefix || 'unset'}_`;
@@ -83,10 +73,10 @@ const cachedStoresMap = new Map<
  * 工厂方法，传入 model 创建 stores，同时注入对应子元素的 client 和 app,
  * 使用缓存方式，防止重复创建
  */
-export function StoresFactory(
+export function StoresFactory<ISubProps>(
   ComponentModel: IAnyModelType,
   idPrefix: string,
-  subAppFactoryMap: TSubFactoryMap,
+  subAppFactoryMap: TSubFactoryMap<ISubProps>,
   subStoresModelMap: Record<string, TAnyMSTModel>
 ) {
   const { subStores, subApps, subClients } = getSubAppsFromFactoryMap(

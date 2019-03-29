@@ -1,5 +1,6 @@
 import Application from 'ette';
 import Router from 'ette-router';
+import { applyProxy, IProxyRule } from 'ide-lib-base-component';
 
 import { IStoresModel } from '../schema/stores';
 import { debugIO } from '../../lib/debug';
@@ -8,6 +9,7 @@ export const createApp = function(
   stores: IStoresModel,
   routers: Router[],
   innerApps: Record<string, Application> = {},
+  proxyRules: IProxyRule[]
 ) {
   const app = new Application({ domain: 'lib-engine' });
   app.innerApps = innerApps; // 新增 innerApps 的挂载
@@ -26,6 +28,11 @@ export const createApp = function(
       }] ${originUrl} ==> response: ${JSON.stringify(ctx.response.toJSON())}`
     );
   });
+
+  // 进行路由代理，要放在路由挂载之前
+  if (proxyRules && proxyRules.length) {
+    applyProxy(app, [].concat(proxyRules));
+  }
 
   // 注册路由
   routers.forEach((router: Router) => {

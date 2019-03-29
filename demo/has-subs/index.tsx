@@ -5,9 +5,7 @@ import { IBaseTheme, IBaseComponentProps } from 'ide-lib-base-component';
 import { TComponentCurrying } from '../../src';
 
 import { StyledContainer } from './styles';
-import { ISubProps  } from './subs';
-
-
+import { ISubProps } from './subs';
 
 export interface IHeaderBlockEvent {
   /**
@@ -44,7 +42,7 @@ export const DEFAULT_PROPS: IHeaderBlockProps = {
   theme: {
     main: '#25ab68'
   },
-  headerBar:{
+  headerBar: {
     buttons: [
       {
         id: 'edit',
@@ -59,10 +57,14 @@ export const DEFAULT_PROPS: IHeaderBlockProps = {
 };
 
 export const HeaderBlockCurrying: TComponentCurrying<
-  IHeaderBlockProps
+  IHeaderBlockProps,
+  ISubProps
 > = subComponents => props => {
   const { headerBar, visible, text, styles, onClick } = props;
-  const { HeaderBar } = subComponents as Record<string, React.FunctionComponent<typeof props>>;
+  const { HeaderBar } = subComponents as Record<
+    string,
+    React.FunctionComponent<typeof props>
+  >;
 
   const onClickButton = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {

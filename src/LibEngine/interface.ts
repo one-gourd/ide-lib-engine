@@ -7,16 +7,26 @@ import {
 } from 'ide-lib-base-component';
 import { IAnyType } from 'mobx-state-tree';
 
+export type TFactoryFunction = (
+  ...args: any[]
+) => Partial<IStoresEnv<TAnyMSTModel>>;
+
+export type TSubFactoryMap<ISubProps> = Record<
+  keyof ISubProps,
+  TFactoryFunction
+>;
+
+// TODO: 迁移到 lib-base-component 中
+export type ValueOf<T> = T[keyof T];
+
 // type TProps<T> = T extends (infer U) ? U : any;
-export interface IComponentConfig<Props, SubProps> {
+export interface IComponentConfig<Props, ISubProps> {
   className: string;
   solution?: Record<string, TAnyFunction[]>;
   defaultProps?: Props;
-  children?: Record<string, IComponentConfig<SubProps, any>>;
+  children?: Record<string, IComponentConfig<ValueOf<ISubProps>, any>>;
   storesModel?: TAnyMSTModel;
-
-  // TODO: 细化 factory 的类型
-  factory?: (...args: any[]) => Partial<IStoresEnv<TAnyMSTModel>>;
+  factory?: TFactoryFunction;
 
   // 主要是用在 children 内的
   normal?: React.FunctionComponent<Props>;
@@ -24,12 +34,13 @@ export interface IComponentConfig<Props, SubProps> {
     storesEnv: IStoresEnv<TAnyMSTModel>
   ) => React.FunctionComponent<Props>;
   namedAs?: string; // 属性名
+  // TODO: 支持更加灵活的路由代理配置
+  routerProxy?: string[];
 }
-export interface IModuleConfig<Props, SubProps> {
-  component: IComponentConfig<Props, SubProps>;
+export interface IModuleConfig<Props, ISubProps> {
+  component: IComponentConfig<Props, ISubProps>;
   routers: {
     domain: string;
-    proxies?: IProxyRule | IProxyRule[];
     list?: Router[];
   };
 

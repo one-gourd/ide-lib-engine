@@ -5,14 +5,17 @@ import { IStoresModel, IModuleConfig } from '../../src';
 import { DEFAULT_PROPS, IHeaderBlockProps } from '.';
 import { showConsole } from './solution';
 
-import { subComponents, TSubProps } from './subs';
+import { subComponents, ISubProps } from './subs';
 
 import { router as GetRouter } from './router/get';
 import { router as PostRouter } from './router/post';
 import { router as PutRouter } from './router/put';
 import { router as DelRouter } from './router/del';
 
-export const configHeaderBlock: IModuleConfig<IHeaderBlockProps, TSubProps> = {
+export const configHeaderBlock: IModuleConfig<
+  IHeaderBlockProps,
+  ISubProps
+> = {
   component: {
     className: 'HeaderBlock',
     solution: {

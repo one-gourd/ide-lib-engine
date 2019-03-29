@@ -11,14 +11,15 @@ import {
   TAnyFunction,
   IStoresEnv,
   extracSubEnv,
-  TAnyMSTModel
+  TAnyMSTModel,
+  IProxyRule
 } from 'ide-lib-base-component';
 
 import { debugRender } from '../lib/debug';
 import { createApp } from './controller/index';
-import { StoresFactory, TSubFactoryMap } from './schema/stores';
+import { StoresFactory } from './schema/stores';
 import { createModelFromConfig } from './schema/index';
-import { IComponentConfig } from './interface';
+import { IComponentConfig, TSubFactoryMap } from './interface';
 
 let modelId = 1;
 
@@ -29,20 +30,28 @@ let modelId = 1;
 /**
  * 生成 env 对象，方便在不同的状态组件中传递上下文
  */
-export const createStoresEnv = (
+export const createStoresEnv: <ISubProps>(
   ComponentModel: IAnyModelType,
-  subFactoryMap: TSubFactoryMap,
-  subStoresModelMap: Record<string, TAnyMSTModel>,
+  subFactoryMap: TSubFactoryMap<ISubProps>,
+  subStoresModelMap: Record<keyof ISubProps, TAnyMSTModel>,
   routers: Router[],
-  idPrefix: string
+  idPrefix: string,
+  proxyRules: IProxyRule[]
+) => IStoresEnv<TAnyMSTModel> = (
+  ComponentModel,
+  subFactoryMap,
+  subStoresModelMap,
+  routers,
+  idPrefix,
+  proxyRules
 ) => {
-  const { stores, innerApps } = StoresFactory(
+  const { stores, innerApps } = StoresFactory<typeof subStoresModelMap>(
     ComponentModel,
     idPrefix,
     subFactoryMap,
     subStoresModelMap
   ); // 创建 stores
-  const app = createApp(stores, routers, innerApps); // 创建 controller，并挂载 model
+  const app = createApp(stores, routers, innerApps, proxyRules); // 创建 controller，并挂载 model
   return {
     stores,
     app,
@@ -52,11 +61,11 @@ export const createStoresEnv = (
 };
 
 // 用户自定义的组件，必须有 subComponents 这个入参 Props
-export type TComponentCurrying<Props> = (
+export type TComponentCurrying<Props, ISubProps> = (
   subComponents:
-    | Record<string, React.FunctionComponent<Props>>
+    | Record<keyof ISubProps, React.FunctionComponent<Props>>
     | Record<
-        string,
+        keyof ISubProps,
         (storesEnv: IStoresEnv<TAnyMSTModel>) => React.FunctionComponent<Props>
       >
 ) => React.FunctionComponent<Props>;
@@ -65,15 +74,15 @@ export type TComponentCurrying<Props> = (
  * 使用高阶组件打造的组件生成器
  * @param subComponents - 子组件列表
  */
-const createComponentHOC: <Props>(
-  ComponentCurrying: TComponentCurrying<Props>,
+const createComponentHOC: <Props, ISubProps>(
+  ComponentCurrying: TComponentCurrying<Props, ISubProps>,
   className: string,
   defaultProps: Props
 ) => (
   subComponents:
-    | Record<string, React.FunctionComponent<Props>>
+    | Record<keyof ISubProps, React.FunctionComponent<Props>>
     | Record<
-        string,
+        keyof ISubProps,
         (storesEnv: IStoresEnv<TAnyMSTModel>) => React.FunctionComponent<Props>
       >
 ) => any = (ComponentCurrying, className, defaultProps) => subComponents => {
@@ -82,17 +91,17 @@ const createComponentHOC: <Props>(
   return observer(based(observer(ResultComponent), defaultProps));
 };
 
-export interface ISuitsConfig<Props, SubProps> {
-  ComponentCurrying: TComponentCurrying<Props>;
+export interface ISuitsConfig<Props, ISubProps> {
+  ComponentCurrying: TComponentCurrying<Props, ISubProps>;
   className: string;
   solution: Record<string, TAnyFunction[]>;
   defaultProps: Props;
   idPrefix: string;
-  subComponents: Record<string, IComponentConfig<Props, SubProps>>;
-  modelProps: Record<string, IAnyType>;
+  subComponents: Record<keyof ISubProps, IComponentConfig<Props, ISubProps>>;
+  modelProps: Record<keyof ISubProps, IAnyType>;
   controlledKeys: string[];
-  subFactoryMap: TSubFactoryMap;
-  subStoresModelMap: Record<string, TAnyMSTModel>;
+  subFactoryMap: TSubFactoryMap<ISubProps>;
+  subStoresModelMap: Record<keyof ISubProps, TAnyMSTModel>;
   routers: Router[];
 }
 
@@ -101,8 +110,8 @@ export interface ISuitsConfig<Props, SubProps> {
  * TODO: 这里替换 any 返回值
  * @param stores - store 模型实例
  */
-export const initSuits: <Props, SubProps>(
-  suitConfig: ISuitsConfig<Props, SubProps>
+export const initSuits: <Props, ISubProps>(
+  suitConfig: ISuitsConfig<Props, ISubProps>
 ) => any = suitConfig => {
   const {
     ComponentCurrying,
@@ -127,21 +136,32 @@ export const initSuits: <Props, SubProps>(
   );
 
   // 构造 normal 组件集合
-  const normalComponents: Record<
-    string,
-    React.FunctionComponent<typeof defaultProps>
-  > = {};
+  const normalComponents = {} as any;
+  const proxyRules: IProxyRule[] = [];
 
-  Object.values(subComponents).map(subComponent => {
-    invariant(
-      !!subComponent.className,
-      `[NormalComponent] ${
-        subComponent.className
-      } 配置项中缺少 'className' 字段，无法生成子组件`
-    );
-    normalComponents[subComponent.className] = subComponent.normal;
-  });
-  console.log(111, className, normalComponents);
+  // 装备组件集合、路由规则
+  Object.values(subComponents).map(
+    (
+      subComponent: IComponentConfig<
+        typeof defaultProps,
+        keyof typeof subFactoryMap
+      >
+    ) => {
+      invariant(
+        !!subComponent.className,
+        `[NormalComponent] ${
+          subComponent.className
+        } 配置项中缺少 'className' 字段，无法生成子组件和路由规则`
+      );
+      normalComponents[subComponent.className] = subComponent.normal;
+
+      // 组装 proxyRules 路由规则
+      proxyRules.push({
+        name: subComponent.namedAs,
+        targets: [].concat(subComponent.routerProxy || [])
+      });
+    }
+  );
 
   const NormalComponent = ComponentHOC(normalComponents);
   NormalComponent.displayName = `${className}`;
@@ -152,24 +172,26 @@ export const initSuits: <Props, SubProps>(
   ) => React.FunctionComponent<typeof defaultProps> = storesEnv => {
     const { stores } = storesEnv;
 
-    const addStoreComponents: Record<
-      string,
-      React.FunctionComponent<typeof defaultProps>
-    > = {};
+    const addStoreComponents = {} as any;
 
-    Object.values(subComponents).map(subComponent => {
-      invariant(
-        !!subComponent.namedAs,
-        `[ComponentAddStore] ${
-          subComponent.className
-        } 配置项中缺少 'namedAs' 字段，无法生成带 Store 状态的组件`
-      );
-      addStoreComponents[subComponent.className] = subComponent.addStore(
-        extracSubEnv(storesEnv, subComponent.namedAs)
-      );
-    });
-
-    console.log(222, className, addStoreComponents);
+    Object.values(subComponents).map(
+      (
+        subComponent: IComponentConfig<
+          typeof defaultProps,
+          keyof typeof subFactoryMap
+        >
+      ) => {
+        invariant(
+          !!subComponent.namedAs,
+          `[ComponentAddStore] ${
+            subComponent.className
+          } 配置项中缺少 'namedAs' 字段，无法生成带 Store 状态的组件`
+        );
+        addStoreComponents[subComponent.className] = subComponent.addStore(
+          extracSubEnv(storesEnv, subComponent.namedAs)
+        );
+      }
+    );
 
     const ComponentHasSubStore = ComponentHOC(addStoreComponents);
 
@@ -227,7 +249,8 @@ export const initSuits: <Props, SubProps>(
       subFactoryMap,
       subStoresModelMap,
       routers,
-      idPrefix
+      idPrefix,
+      proxyRules
     );
     return {
       ...storesEnv,

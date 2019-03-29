@@ -7,7 +7,7 @@ import {
   HeaderBarFactory
 } from 'ide-header-bar';
 
-import { IComponentConfig } from '../../src';
+import { IComponentConfig, ValueOf } from '../../src';
 
 // model + control: 枚举子属性
 // export enum ESubApps {
@@ -15,14 +15,16 @@ import { IComponentConfig } from '../../src';
 // }
 
 // component: 子组件属性名
+
 export interface ISubProps {
   headerBar?: IHeaderBarProps;
 }
 
-export type TSubProps = IHeaderBarProps;
-
 // component: 子组件属性列表
-export const subComponents: Record<string, IComponentConfig<TSubProps, any>> = {
+export const subComponents: Record<
+  keyof ISubProps,
+  IComponentConfig<ValueOf<ISubProps>, any>
+> = {
   headerBar: {
     className: 'HeaderBar',
     namedAs: 'headerBar',
@@ -31,5 +33,6 @@ export const subComponents: Record<string, IComponentConfig<TSubProps, any>> = {
     addStore: HeaderBarAddStore,
     storesModel: HeaderBarStores,
     factory: HeaderBarFactory,
+    routerProxy: ['headerbar']
   }
 };

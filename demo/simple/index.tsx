@@ -46,7 +46,7 @@ export const DEFAULT_PROPS: ILibEngineProps = {
 };
 
 export const LibEngineCurrying: TComponentCurrying<
-  ILibEngineProps
+  ILibEngineProps, {}
 > = subComponents => props => {
   const { visible, text, styles, onClick } = props;
 
