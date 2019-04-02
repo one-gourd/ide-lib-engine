@@ -34,7 +34,7 @@ const {
   subStoresModelMap: subStoresModelMap,
   subFactoryMap: subFactoryMap,
   idPrefix: configHeaderBlock.store.idPrefix,
-  routers: configHeaderBlock.routers.list
+  routerConfig: configHeaderBlock.router
 });
 
 export {

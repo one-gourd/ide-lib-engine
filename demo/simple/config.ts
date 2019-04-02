@@ -19,7 +19,7 @@ export const configLibEngine: IModuleConfig<ILibEngineProps, never> = {
     defaultProps: DEFAULT_PROPS,
     children: {}
   },
-  routers: {
+  router: {
     domain: 'ide-engine',
     list: [GetRouter, PostRouter, PutRouter, DelRouter]
   },

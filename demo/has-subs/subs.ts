@@ -33,6 +33,6 @@ export const subComponents: Record<
     addStore: HeaderBarAddStore,
     storesModel: HeaderBarStores,
     factory: HeaderBarFactory,
-    routerProxy: ['headerbar']
+    routeScope: ['headerbar'] // 能通过父组件访问到的路径
   }
 };

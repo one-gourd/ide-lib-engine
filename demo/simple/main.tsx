@@ -22,9 +22,9 @@ const {
   controlledKeys: configLibEngine.model.controlledKeys,
   modelProps: configLibEngine.model.props,
   subFactoryMap: {},
-  subStoresModelMap:{},
+  subStoresModelMap: {},
   idPrefix: configLibEngine.store.idPrefix,
-  routers: configLibEngine.routers.list
+  routerConfig: configLibEngine.router
 });
 
 export {

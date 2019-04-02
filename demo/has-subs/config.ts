@@ -12,10 +12,7 @@ import { router as PostRouter } from './router/post';
 import { router as PutRouter } from './router/put';
 import { router as DelRouter } from './router/del';
 
-export const configHeaderBlock: IModuleConfig<
-  IHeaderBlockProps,
-  ISubProps
-> = {
+export const configHeaderBlock: IModuleConfig<IHeaderBlockProps, ISubProps> = {
   component: {
     className: 'HeaderBlock',
     solution: {
@@ -24,9 +21,17 @@ export const configHeaderBlock: IModuleConfig<
     defaultProps: DEFAULT_PROPS,
     children: subComponents
   },
-  routers: {
+  router: {
     domain: 'header-block',
-    list: [GetRouter, PostRouter, PutRouter, DelRouter]
+    list: [GetRouter, PostRouter, PutRouter, DelRouter],
+    hoistRoutes: {
+      alias: 'bar',
+      routerNames: 'headerBar'
+    }, // 提升访问子路由功能，相当于是强约束化的 alias
+    aliases: {
+      alias: 'blockbar',
+      path: 'bar/headerbar'
+    } // 自定义的路由别名规则
   },
   store: {
     idPrefix: 'sle'

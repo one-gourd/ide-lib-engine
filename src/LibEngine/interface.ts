@@ -2,6 +2,8 @@ import Router from 'ette-router';
 import {
   TAnyFunction,
   IProxyRule,
+  IAliasRoute,
+  IAliasRule,
   IStoresEnv,
   TAnyMSTModel
 } from 'ide-lib-base-component';
@@ -34,14 +36,15 @@ export interface IComponentConfig<Props, ISubProps> {
     storesEnv: IStoresEnv<TAnyMSTModel>
   ) => React.FunctionComponent<Props>;
   namedAs?: string; // 属性名
-  // TODO: 支持更加灵活的路由代理配置
-  routerProxy?: string[];
+  routeScope?: string[]; // 可以被父元素访问到的 route 名字
 }
 export interface IModuleConfig<Props, ISubProps> {
   component: IComponentConfig<Props, ISubProps>;
-  routers: {
+  router: {
     domain: string;
     list?: Router[];
+    hoistRoutes?: IAliasRoute | IAliasRoute[]; // 提升访问子路由功能，相当于是强约束化的 alias
+    aliases?: IAliasRule | IAliasRule[]; // 自定义的路由别名规则
   };
 
   store: {

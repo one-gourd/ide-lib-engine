@@ -18,14 +18,17 @@ const {
 function onClick(value) {
   console.log('当前点击：', value);
 }
-const onClickWithStore = (client) => (value) => {
+const onClickWithStore = client => value => {
   client.put(`/model`, {
     name: 'text',
     value: `gggg${Math.random()}`.slice(0, 8)
   });
 
-  client.put('/clients/headerBar/headerbar', { name: 'logo', value: 'https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png'});
-}
+  client.put('/alias/blockbar', {
+    name: 'logo',
+    value: 'https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png'
+  });
+};
 
 const props: ILibEngineProps = {
   visible: true

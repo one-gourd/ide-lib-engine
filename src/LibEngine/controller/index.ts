@@ -1,6 +1,13 @@
 import Application from 'ette';
 import Router from 'ette-router';
-import { applyProxy, IProxyRule } from 'ide-lib-base-component';
+import {
+  applyProxy,
+  aliasPathProxy,
+  hoistSubRoutes,
+  IProxyRule,
+  IAliasRoute,
+  IAliasRule
+} from 'ide-lib-base-component';
 
 import { IStoresModel } from '../schema/stores';
 import { debugIO } from '../../lib/debug';
@@ -9,7 +16,9 @@ export const createApp = function(
   stores: IStoresModel,
   routers: Router[],
   innerApps: Record<string, Application> = {},
-  proxyRules: IProxyRule[]
+  proxyRules: IProxyRule[],
+  aliasRoutes: IAliasRoute[],
+  aliases: IAliasRule[]
 ) {
   const app = new Application({ domain: 'lib-engine' });
   app.innerApps = innerApps; // 新增 innerApps 的挂载
@@ -29,9 +38,19 @@ export const createApp = function(
     );
   });
 
-  // 进行路由代理，要放在路由挂载之前
+  // 进行路由代理
   if (proxyRules && proxyRules.length) {
-    applyProxy(app, [].concat(proxyRules));
+    applyProxy(app, proxyRules);
+  }
+
+  // 子路由代理：子路由提升
+  if (aliasRoutes && aliasRoutes.length) {
+    hoistSubRoutes(app, aliasRoutes);
+  }
+
+  // 自定义重定向路由规则
+  if (aliasRoutes && aliasRoutes.length) {
+    aliasPathProxy(app, aliases);
   }
 
   // 注册路由

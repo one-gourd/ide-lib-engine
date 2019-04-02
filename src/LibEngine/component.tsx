@@ -12,14 +12,16 @@ import {
   IStoresEnv,
   extracSubEnv,
   TAnyMSTModel,
-  IProxyRule
+  IProxyRule,
+  IAliasRoute,
+  IAliasRule
 } from 'ide-lib-base-component';
 
 import { debugRender } from '../lib/debug';
 import { createApp } from './controller/index';
 import { StoresFactory } from './schema/stores';
 import { createModelFromConfig } from './schema/index';
-import { IComponentConfig, TSubFactoryMap } from './interface';
+import { IComponentConfig, TSubFactoryMap, IModuleConfig } from './interface';
 
 let modelId = 1;
 
@@ -36,14 +38,18 @@ export const createStoresEnv: <ISubProps>(
   subStoresModelMap: Record<keyof ISubProps, TAnyMSTModel>,
   routers: Router[],
   idPrefix: string,
-  proxyRules: IProxyRule[]
+  proxyRules: IProxyRule[],
+  aliasRoutes: IAliasRoute[],
+  aliases: IAliasRule[]
 ) => IStoresEnv<TAnyMSTModel> = (
   ComponentModel,
   subFactoryMap,
   subStoresModelMap,
   routers,
   idPrefix,
-  proxyRules
+  proxyRules,
+  aliasRoutes,
+  aliases
 ) => {
   const { stores, innerApps } = StoresFactory<typeof subStoresModelMap>(
     ComponentModel,
@@ -51,7 +57,14 @@ export const createStoresEnv: <ISubProps>(
     subFactoryMap,
     subStoresModelMap
   ); // 创建 stores
-  const app = createApp(stores, routers, innerApps, proxyRules); // 创建 controller，并挂载 model
+  const app = createApp(
+    stores,
+    routers,
+    innerApps,
+    proxyRules,
+    aliasRoutes,
+    aliases
+  ); // 创建 controller，并挂载 model
   return {
     stores,
     app,
@@ -102,7 +115,7 @@ export interface ISuitsConfig<Props, ISubProps> {
   controlledKeys: string[];
   subFactoryMap: TSubFactoryMap<ISubProps>;
   subStoresModelMap: Record<keyof ISubProps, TAnyMSTModel>;
-  routers: Router[];
+  routerConfig: IModuleConfig<Props, ISubProps>['router'];
 }
 
 /**
@@ -122,7 +135,7 @@ export const initSuits: <Props, ISubProps>(
     modelProps,
     solution,
     idPrefix,
-    routers,
+    routerConfig,
     subFactoryMap,
     subStoresModelMap
   } = suitConfig;
@@ -137,7 +150,22 @@ export const initSuits: <Props, ISubProps>(
 
   // 构造 normal 组件集合
   const normalComponents = {} as any;
+
+  // 获取路由列表
+  const routers = routerConfig.list || [];
+
+  // 整理子元素的路由代理规则
   const proxyRules: IProxyRule[] = [];
+
+  // 整理子路由提升规则和自定义路由规则
+  const aliasRoutes: IAliasRoute[] = [].concat(routerConfig.hoistRoutes || []);
+  // 为了统一管理，针对 alias 规则，全部放在 /alias 命名空间下
+  const aliases: IAliasRule[] = [].concat(routerConfig.aliases || []).map((rule:IAliasRule)=>{
+    return {
+      alias: `/alias/${rule.alias}`,
+      path: rule.path
+    }
+  });
 
   // 装备组件集合、路由规则
   Object.values(subComponents).map(
@@ -158,7 +186,7 @@ export const initSuits: <Props, ISubProps>(
       // 组装 proxyRules 路由规则
       proxyRules.push({
         name: subComponent.namedAs,
-        targets: [].concat(subComponent.routerProxy || [])
+        targets: [].concat(subComponent.routeScope || [])
       });
     }
   );
@@ -250,7 +278,9 @@ export const initSuits: <Props, ISubProps>(
       subStoresModelMap,
       routers,
       idPrefix,
-      proxyRules
+      proxyRules,
+      aliasRoutes,
+      aliases
     );
     return {
       ...storesEnv,
