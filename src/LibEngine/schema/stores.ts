@@ -14,7 +14,7 @@ import {
 
 import { createEmptyModel } from './util';
 
-import { TSubFactoryMap } from '../interface';
+import { TSubFactoryMap } from '../component';
 
 function getPrefix(idPrefix: string) {
   return `${idPrefix || 'unset'}_`;

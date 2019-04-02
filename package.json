@@ -66,7 +66,7 @@
     "ts-import-plugin": "^1.5.5",
     "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
-    "typescript": "^3.1.6",
+    "typescript": "3.3.4000",
     "uglifyjs-webpack-plugin": "^2.0.1",
     "webpack": "^4.25.1",
     "webpack-cli": "^3.1.2",

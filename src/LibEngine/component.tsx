@@ -14,14 +14,87 @@ import {
   TAnyMSTModel,
   IProxyRule,
   IAliasRoute,
-  IAliasRule
+  IAliasRule,
+  ValueOf
 } from 'ide-lib-base-component';
 
 import { debugRender } from '../lib/debug';
 import { createApp } from './controller/index';
 import { StoresFactory } from './schema/stores';
 import { createModelFromConfig } from './schema/index';
-import { IComponentConfig, TSubFactoryMap, IModuleConfig } from './interface';
+
+/* ----------------------------------------------------
+    类型声明
+----------------------------------------------------- */
+export declare type TFactoryFunction = (
+  ...args: any[]
+) => Partial<IStoresEnv<TAnyMSTModel>>;
+
+export declare type TSubFactoryMap<ISubProps> = Record<
+  keyof ISubProps,
+  TFactoryFunction
+>;
+
+// type TProps<T> = T extends (infer U) ? U : any;
+export declare interface IComponentConfig<Props, ISubProps> {
+  className: string;
+  solution?: Record<string, TAnyFunction[]>;
+  defaultProps?: Props;
+  children?: Record<keyof ISubProps, IComponentConfig<ValueOf<ISubProps>, any>>;
+  storesModel?: TAnyMSTModel;
+  factory?: TFactoryFunction;
+
+  // 主要是用在 children 内的
+  normal?: React.FunctionComponent<Props>;
+  addStore?: (
+    storesEnv: IStoresEnv<TAnyMSTModel>
+  ) => React.FunctionComponent<Props>;
+  namedAs?: string; // 属性名
+  routeScope?: string[]; // 可以被父元素访问到的 route 名字
+}
+export declare interface IModuleConfig<Props, ISubProps> {
+  component: IComponentConfig<Props, ISubProps>;
+  router: {
+    domain: string;
+    list?: Router[];
+    hoistRoutes?: IAliasRoute | IAliasRoute[]; // 提升访问子路由功能，相当于是强约束化的 alias
+    aliases?: IAliasRule | IAliasRule[]; // 自定义的路由别名规则
+  };
+
+  store: {
+    idPrefix: string;
+  };
+  model: {
+    controlledKeys: string[];
+    props: Record<string, IAnyType>;
+  };
+}
+
+// 用户自定义的组件，必须有 subComponents 这个入参 Props
+export type TComponentCurrying<Props, ISubProps> = (
+  subComponents:
+    | Record<keyof ISubProps, React.FunctionComponent<Props>>
+    | Record<
+        keyof ISubProps,
+        (storesEnv: IStoresEnv<TAnyMSTModel>) => React.FunctionComponent<Props>
+      >
+) => React.FunctionComponent<Props>;
+
+export interface ISuitsConfig<Props, ISubProps> {
+  ComponentCurrying: TComponentCurrying<Props, ISubProps>;
+  className: string;
+  solution: Record<string, TAnyFunction[]>;
+  defaultProps: Props;
+  idPrefix: string;
+  subComponents: Record<keyof ISubProps, IComponentConfig<Props, ISubProps>>;
+  modelProps: Record<keyof ISubProps, IAnyType>;
+  controlledKeys: string[];
+  subFactoryMap: TSubFactoryMap<ISubProps>;
+  subStoresModelMap: Record<keyof ISubProps, TAnyMSTModel>;
+  routerConfig: IModuleConfig<Props, ISubProps>['router'];
+}
+
+// ===============================================
 
 let modelId = 1;
 
@@ -73,16 +146,6 @@ export const createStoresEnv: <ISubProps>(
   };
 };
 
-// 用户自定义的组件，必须有 subComponents 这个入参 Props
-export type TComponentCurrying<Props, ISubProps> = (
-  subComponents:
-    | Record<keyof ISubProps, React.FunctionComponent<Props>>
-    | Record<
-        keyof ISubProps,
-        (storesEnv: IStoresEnv<TAnyMSTModel>) => React.FunctionComponent<Props>
-      >
-) => React.FunctionComponent<Props>;
-
 /**
  * 使用高阶组件打造的组件生成器
  * @param subComponents - 子组件列表
@@ -103,20 +166,6 @@ const createComponentHOC: <Props, ISubProps>(
   ResultComponent.displayName = `${className}HOC`;
   return observer(based(observer(ResultComponent), defaultProps));
 };
-
-export interface ISuitsConfig<Props, ISubProps> {
-  ComponentCurrying: TComponentCurrying<Props, ISubProps>;
-  className: string;
-  solution: Record<string, TAnyFunction[]>;
-  defaultProps: Props;
-  idPrefix: string;
-  subComponents: Record<keyof ISubProps, IComponentConfig<Props, ISubProps>>;
-  modelProps: Record<keyof ISubProps, IAnyType>;
-  controlledKeys: string[];
-  subFactoryMap: TSubFactoryMap<ISubProps>;
-  subStoresModelMap: Record<keyof ISubProps, TAnyMSTModel>;
-  routerConfig: IModuleConfig<Props, ISubProps>['router'];
-}
 
 /**
  * 科里化创建 ComponentWithStore 组件
@@ -160,12 +209,14 @@ export const initSuits: <Props, ISubProps>(
   // 整理子路由提升规则和自定义路由规则
   const aliasRoutes: IAliasRoute[] = [].concat(routerConfig.hoistRoutes || []);
   // 为了统一管理，针对 alias 规则，全部放在 /alias 命名空间下
-  const aliases: IAliasRule[] = [].concat(routerConfig.aliases || []).map((rule:IAliasRule)=>{
-    return {
-      alias: `/alias/${rule.alias}`,
-      path: rule.path
-    }
-  });
+  const aliases: IAliasRule[] = []
+    .concat(routerConfig.aliases || [])
+    .map((rule: IAliasRule) => {
+      return {
+        alias: `/alias/${rule.alias}`,
+        path: rule.path
+      };
+    });
 
   // 装备组件集合、路由规则
   Object.values(subComponents).map(
