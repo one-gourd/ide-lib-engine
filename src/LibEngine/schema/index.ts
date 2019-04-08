@@ -34,6 +34,14 @@ const createSetMethods = function(
   return result;
 };
 
+/**
+ * 根据配置项生成 mst 模型
+ * 该功能是定制化的，专门用于 engine 系列组件的
+ * @param className - 基础类名
+ * @param modelProps - mst 属性定义
+ * @param controlledKeys - 被 controlled 的属性
+ * @param modelId - 模型 id
+ */
 export const createModelFromConfig: (
   className: string,
   modelProps: Record<string, IAnyType>,
@@ -68,7 +76,48 @@ export const createModelFromConfig: (
         updateAttribute(name: string, value: any) {
           debugModel(
             `[updateAttribute] 将要更新 ${
-            self.id
+              self.id
+            } 中属性 ${name} 值为 ${value}; (control keys: ${controlledKeys})`
+          );
+          return updateModelAttribute(controlledKeys)(self, name, value);
+        }
+      };
+    });
+};
+
+/**
+ * 根据 props 定义快速生成 mst 模型
+ * 该功能是通用型的，主要是为了简化 mst 模型的创建
+ * @param modelName - 模型名
+ * @param modelProps - mst 属性定义
+ */
+export const quickInitModel: (
+  modelName: string,
+  modelProps: Record<string, IAnyType>
+) => IAnyModelType = (modelName, modelProps) => {
+  const controlledKeys = Object.keys(modelProps);
+  return types
+    .model(modelName, modelProps)
+    .views(self => {
+      return {
+        /**
+         * 只返回当前模型的属性，可以通过 filter 字符串进行属性项过滤
+         */
+        allAttibuteWithFilter(filterArray: string | string[] = controlledKeys) {
+          const filters = [].concat(filterArray || []);
+          return pick(self, filters);
+        }
+      };
+    })
+    .actions(self => {
+      return createSetMethods(self, modelProps);
+    })
+    .actions(self => {
+      return {
+        updateAttribute(name: string, value: any) {
+          debugModel(
+            `[updateAttribute] 将要更新 ${
+              self.id
             } 中属性 ${name} 值为 ${value}; (control keys: ${controlledKeys})`
           );
           return updateModelAttribute(controlledKeys)(self, name, value);
