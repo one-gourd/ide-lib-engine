@@ -9,7 +9,11 @@ import {
 import { Collapse } from 'antd';
 const Panel = Collapse.Panel;
 
-const { ComponentWithStore: LibEngineWithStore, client } = LibEngineFactory();
+const {
+  ComponentWithStore: LibEngineWithStore,
+  client,
+  stores: SimpleStores
+} = LibEngineFactory();
 const {
   ComponentWithStore: HeaderBlockWithStore,
   client: clientHeaderBlock
@@ -18,16 +22,21 @@ const {
 function onClick(value) {
   console.log('当前点击：', value);
 }
-const onClickWithStore = client => value => {
+const onClickWithStore = (client, isSimple = false) => value => {
   client.put(`/model`, {
     name: 'text',
-    value: `gggg${Math.random()}`.slice(0, 8)
+    value: `gggg${Math.random()}`.slice(0, 1 + 10 * Math.random())
   });
 
   client.put('/alias/blockbar', {
     name: 'logo',
     value: 'https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png'
   });
+
+  isSimple && console.log(
+    'stores.model.textLength: ',
+    SimpleStores.model.textLength
+  );
 };
 
 const props: ILibEngineProps = {
@@ -40,7 +49,7 @@ render(
       <LibEngine {...props} onClick={onClick} />
     </Panel>
     <Panel header="简单组件 - 包含 store 功能" key="1">
-      <LibEngineWithStore onClick={onClickWithStore(client)} />
+      <LibEngineWithStore onClick={onClickWithStore(client, true)} />
     </Panel>
     <Panel header="含子组件" key="2">
       <HeaderBlock {...props} onClick={onClick} />

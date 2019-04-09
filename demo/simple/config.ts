@@ -1,4 +1,4 @@
-import { types } from 'mobx-state-tree';
+import { types, IAnyModelType } from 'mobx-state-tree';
 import { BASE_CONTROLLED_KEYS } from 'ide-lib-base-component';
 
 import { DEFAULT_PROPS, ILibEngineProps } from '.';
@@ -39,6 +39,21 @@ export const configLibEngine: IModuleConfig<ILibEngineProps, never> = {
       // options: types.map(types.union(types.boolean, types.string))
       // 在 mst v3 中， `types.map` 默认值就是 `{}`
       //  ide 的 Options 可选值参考： https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.ieditorconstructionoptions.html
+    }, 
+    extends: (model: IAnyModelType) => {
+      return model.views(self=>{
+        return {
+          get textLength(){
+            return self.text.length
+          }
+        }
+      }).actions(self=>{
+        return {
+          appendTag(){
+            self.text += 'tag';
+          }
+        }
+      });
     }
   }
 };

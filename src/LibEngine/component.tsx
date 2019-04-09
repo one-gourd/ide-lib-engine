@@ -15,7 +15,8 @@ import {
   IProxyRule,
   IAliasRoute,
   IAliasRule,
-  ValueOf
+  ValueOf,
+  IAnyModelInstance
 } from 'ide-lib-base-component';
 
 import { debugRender } from '../lib/debug';
@@ -67,6 +68,7 @@ export declare interface IModuleConfig<Props, ISubProps> {
   model: {
     controlledKeys: string[];
     props: Record<string, IAnyType>;
+    extends?: (model: IAnyModelType) => IAnyModelType;
   };
 }
 
@@ -88,6 +90,7 @@ export interface ISuitsConfig<Props, ISubProps> {
   idPrefix: string;
   subComponents: Record<keyof ISubProps, IComponentConfig<Props, ISubProps>>;
   modelProps: Record<keyof ISubProps, IAnyType>;
+  modelExtends: (model: IAnyModelType) => IAnyModelType;
   controlledKeys: string[];
   subFactoryMap: TSubFactoryMap<ISubProps>;
   subStoresModelMap: Record<keyof ISubProps, TAnyMSTModel>;
@@ -167,6 +170,10 @@ const createComponentHOC: <Props, ISubProps>(
   return observer(based(observer(ResultComponent), defaultProps));
 };
 
+const DEFAULT_MODEL_EXTENDER = (model: IAnyModelType) => {
+  return model;
+};
+
 /**
  * 科里化创建 ComponentWithStore 组件
  * TODO: 这里替换 any 返回值
@@ -182,6 +189,7 @@ export const initSuits: <Props, ISubProps>(
     subComponents,
     controlledKeys,
     modelProps,
+    modelExtends = DEFAULT_MODEL_EXTENDER,
     solution,
     idPrefix,
     routerConfig,
@@ -306,12 +314,9 @@ export const initSuits: <Props, ISubProps>(
     return observer(ComponentWithStore);
   };
 
-  // 创建 LibEngine 数据模型
-  const ComponentModel = createModelFromConfig(
-    className,
-    modelProps,
-    controlledKeys,
-    modelId++
+  // 创建 LibEngine 数据模型（扩展 ComponentModel）
+  const ComponentModel = modelExtends(
+    createModelFromConfig(className, modelProps, controlledKeys, modelId++) // 基础 Model 
   );
 
   // 给 model 随身带上 _defaultProps 属性，让初始化 model 的时候，view 和 model 数据保持一致
