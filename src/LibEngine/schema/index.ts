@@ -1,4 +1,4 @@
-import { types, Instance, IAnyType, IAnyModelType } from 'mobx-state-tree';
+import { types, cast, IAnyType, IAnyModelType } from 'mobx-state-tree';
 
 import { pick, capitalize } from 'ide-lib-utils';
 import {
@@ -10,6 +10,24 @@ import {
 import { updateModelAttribute } from './util';
 import { debugModel } from '../../lib/debug';
 
+/**
+ * 类型转换函数，简化 mst 的赋值操作
+ */
+const converterMap: Record<string, (val: any) => any> = {
+  integer: function(val: any) {
+    return parseInt(val);
+  },
+  number: function(val: any) {
+    return parseFloat(val);
+  },
+  boolean: function(val: any) {
+    return val === 'true' || val === true;
+  },
+  Date: function(val: any) {
+    return new Date(val);
+  }
+};
+
 const createSetMethods = function(
   modelInstance: IAnyModelInstance,
   modelProps: Record<string, IAnyType>
@@ -19,16 +37,14 @@ const createSetMethods = function(
     if (modelProps.hasOwnProperty(propName)) {
       const prop = modelProps[propName as keyof typeof modelProps];
       const typeName = prop.name;
+      console.log(444, typeName);
       const fnName = `set${capitalize(propName)}`;
-      if (typeName === 'string') {
-        result[fnName] = function name(val: string) {
-          modelInstance[propName] = val;
-        };
-      } else if (typeName === 'boolean') {
-        result[fnName] = function name(val: string | boolean) {
-          modelInstance[propName] = val === 'true' || val === true;
-        };
-      }
+
+      // 如果没有匹配到转换函数，则使用官方的 cast 方法
+      const mappedConverted = converterMap[typeName] || cast;
+      result[fnName] = function(val: string) {
+        modelInstance[propName] = mappedConverted(val);
+      };
     }
   }
   return result;
