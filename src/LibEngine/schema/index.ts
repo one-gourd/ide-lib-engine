@@ -37,7 +37,6 @@ const createSetMethods = function(
     if (modelProps.hasOwnProperty(propName)) {
       const prop = modelProps[propName as keyof typeof modelProps];
       const typeName = prop.name;
-      console.log(444, typeName);
       const fnName = `set${capitalize(propName)}`;
 
       // 如果没有匹配到转换函数，则使用官方的 cast 方法
