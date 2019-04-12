@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.2"></a>
+## [0.1.2](https://github.com/alibaba-paimai-frontend/ide-lib-engine/compare/v0.1.1...v0.1.2) (2019-04-12)
+
+
+### Features
+
+* **功能新增: 方法:** 新增 quickInitModel 方法, 用于快速创建 mst 对象 ([55c27cd](https://github.com/alibaba-paimai-frontend/ide-lib-engine/commit/55c27cd))
+* **功能新增: 配置项:** 新增 extends 配置项, 能够扩展 MST 对象的能力; ([d555410](https://github.com/alibaba-paimai-frontend/ide-lib-engine/commit/d555410))
+
+
+
 <a name="0.1.1"></a>
 ## 0.1.1 (2019-04-02)
 
