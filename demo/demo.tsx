@@ -22,7 +22,13 @@ const {
 function onClick(value) {
   console.log('当前点击：', value);
 }
-const onClickWithStore = (client, isSimple = false) => value => {
+const onClickWithStore = (client, isSimple = false) => (
+  value,
+  actionContext
+) => {
+  const { context } = actionContext;
+  console.log('[onClick] action context:', context);
+
   client.put(`/model`, {
     name: 'text',
     value: `gggg${Math.random()}`.slice(0, 1 + 10 * Math.random())
@@ -33,10 +39,8 @@ const onClickWithStore = (client, isSimple = false) => value => {
     value: 'https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png'
   });
 
-  isSimple && console.log(
-    'stores.model.textLength: ',
-    SimpleStores.model.textLength
-  );
+  isSimple &&
+    console.log('stores.model.textLength: ', SimpleStores.model.textLength);
 };
 
 const props: ILibEngineProps = {
