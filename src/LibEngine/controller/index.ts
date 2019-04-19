@@ -18,9 +18,10 @@ export const createApp = function(
   innerApps: Record<string, Application> = {},
   proxyRules: IProxyRule[],
   aliasRoutes: IAliasRoute[],
-  aliases: IAliasRule[]
+  aliases: IAliasRule[],
+  domain: string
 ) {
-  const app = new Application({ domain: 'lib-engine' });
+  const app = new Application({ domain: domain });
   app.innerApps = innerApps; // 新增 innerApps 的挂载
 
   // 挂载 stores 到上下文中，注意这里的 next 必须要使用 async，否则 proxy 的时候将出现异步偏差

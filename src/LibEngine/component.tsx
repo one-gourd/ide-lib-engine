@@ -116,7 +116,8 @@ export const createStoresEnv: <ISubProps>(
   idPrefix: string,
   proxyRules: IProxyRule[],
   aliasRoutes: IAliasRoute[],
-  aliases: IAliasRule[]
+  aliases: IAliasRule[],
+  domain: string
 ) => IStoresEnv<TAnyMSTModel> = (
   ComponentModel,
   subFactoryMap,
@@ -125,7 +126,8 @@ export const createStoresEnv: <ISubProps>(
   idPrefix,
   proxyRules,
   aliasRoutes,
-  aliases
+  aliases,
+  domain
 ) => {
   const { stores, innerApps } = StoresFactory<typeof subStoresModelMap>(
     ComponentModel,
@@ -139,7 +141,8 @@ export const createStoresEnv: <ISubProps>(
     innerApps,
     proxyRules,
     aliasRoutes,
-    aliases
+    aliases,
+    domain
   ); // 创建 controller，并挂载 model
   return {
     stores,
@@ -316,7 +319,7 @@ export const initSuits: <Props, ISubProps>(
 
   // 创建 LibEngine 数据模型（扩展 ComponentModel）
   const ComponentModel = modelExtends(
-    createModelFromConfig(className, modelProps, controlledKeys, modelId++) // 基础 Model 
+    createModelFromConfig(className, modelProps, controlledKeys, modelId++) // 基础 Model
   );
 
   // 给 model 随身带上 _defaultProps 属性，让初始化 model 的时候，view 和 model 数据保持一致
@@ -336,7 +339,8 @@ export const initSuits: <Props, ISubProps>(
       idPrefix,
       proxyRules,
       aliasRoutes,
-      aliases
+      aliases,
+      routerConfig.domain
     );
     return {
       ...storesEnv,
