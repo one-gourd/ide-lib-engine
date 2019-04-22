@@ -31,17 +31,24 @@ export declare type TFactoryFunction = (
   ...args: any[]
 ) => Partial<IStoresEnv<TAnyMSTModel>>;
 
-export declare type TSubFactoryMap<ISubProps> = Record<
-  keyof ISubProps,
+export declare type TSubFactoryMap<ISubMap> = Record<
+  keyof ISubMap,
   TFactoryFunction
 >;
 
+export declare type TRecordObject<P extends string | number | symbol, T> = {
+  [key1 in P]?: T
+} & { [key: string]: any };
+
 // type TProps<T> = T extends (infer U) ? U : any;
-export declare interface IComponentConfig<Props, ISubProps> {
+export declare interface IComponentConfig<Props, ISubMap> {
   className: string;
-  solution?: Record<string, TAnyFunction[]>;
+  solution?: TRecordObject<string, TAnyFunction[]>;
   defaultProps?: Props;
-  children?: Record<keyof ISubProps, IComponentConfig<ValueOf<ISubProps>, any>>;
+  children?: TRecordObject<
+    keyof ISubMap,
+    IComponentConfig<ValueOf<ISubMap>, any>
+  >;
   storesModel?: TAnyMSTModel;
   factory?: TFactoryFunction;
 
@@ -53,8 +60,8 @@ export declare interface IComponentConfig<Props, ISubProps> {
   namedAs?: string; // 属性名
   routeScope?: string[]; // 可以被父元素访问到的 route 名字
 }
-export declare interface IModuleConfig<Props, ISubProps> {
-  component: IComponentConfig<Props, ISubProps>;
+export declare interface IModuleConfig<Props, ISubMap> {
+  component: IComponentConfig<Props, ISubMap>;
   router: {
     domain: string;
     list?: Router[];
@@ -67,34 +74,34 @@ export declare interface IModuleConfig<Props, ISubProps> {
   };
   model: {
     controlledKeys: string[];
-    props: Record<string, IAnyType>;
+    props: TRecordObject<string, IAnyType>;
     extends?: (model: IAnyModelType) => IAnyModelType;
   };
 }
 
 // 用户自定义的组件，必须有 subComponents 这个入参 Props
-export type TComponentCurrying<Props, ISubProps> = (
+export type TComponentCurrying<Props, ISubMap> = (
   subComponents:
-    | Record<keyof ISubProps, React.FunctionComponent<Props>>
+    | Record<keyof ISubMap, React.FunctionComponent<Props>>
     | Record<
-        keyof ISubProps,
+        keyof ISubMap,
         (storesEnv: IStoresEnv<TAnyMSTModel>) => React.FunctionComponent<Props>
       >
 ) => React.FunctionComponent<Props>;
 
-export interface ISuitsConfig<Props, ISubProps> {
-  ComponentCurrying: TComponentCurrying<Props, ISubProps>;
+export interface ISuitsConfig<Props, ISubMap> {
+  ComponentCurrying: TComponentCurrying<Props, ISubMap>;
   className: string;
-  solution: Record<string, TAnyFunction[]>;
+  solution: IComponentConfig<Props, ISubMap>['solution'];
   defaultProps: Props;
   idPrefix: string;
-  subComponents: Record<keyof ISubProps, IComponentConfig<Props, ISubProps>>;
-  modelProps: Record<keyof ISubProps, IAnyType>;
-  modelExtends: (model: IAnyModelType) => IAnyModelType;
+  subComponents: TRecordObject<keyof ISubMap, IComponentConfig<Props, ISubMap>>;
+  modelProps: TRecordObject<string, IAnyType>;
+  modelExtends?: (model: IAnyModelType) => IAnyModelType;
   controlledKeys: string[];
-  subFactoryMap: TSubFactoryMap<ISubProps>;
-  subStoresModelMap: Record<keyof ISubProps, TAnyMSTModel>;
-  routerConfig: IModuleConfig<Props, ISubProps>['router'];
+  subFactoryMap: TSubFactoryMap<ISubMap>;
+  subStoresModelMap: TRecordObject<keyof ISubMap, TAnyMSTModel>;
+  routerConfig: IModuleConfig<Props, ISubMap>['router'];
 }
 
 // ===============================================
@@ -108,10 +115,10 @@ let modelId = 1;
 /**
  * 生成 env 对象，方便在不同的状态组件中传递上下文
  */
-export const createStoresEnv: <ISubProps>(
+export const createStoresEnv: <ISubMap>(
   ComponentModel: IAnyModelType,
-  subFactoryMap: TSubFactoryMap<ISubProps>,
-  subStoresModelMap: Record<keyof ISubProps, TAnyMSTModel>,
+  subFactoryMap: TSubFactoryMap<ISubMap>,
+  subStoresModelMap: Record<keyof ISubMap, TAnyMSTModel>,
   routers: Router[],
   idPrefix: string,
   proxyRules: IProxyRule[],
@@ -156,18 +163,15 @@ export const createStoresEnv: <ISubProps>(
  * 使用高阶组件打造的组件生成器
  * @param subComponents - 子组件列表
  */
-const createComponentHOC: <Props, ISubProps>(
-  ComponentCurrying: TComponentCurrying<Props, ISubProps>,
+const createComponentHOC: <Props, ISubMap>(
+  ComponentCurrying: ISuitsConfig<Props, ISubMap>['ComponentCurrying'],
   className: string,
   defaultProps: Props
-) => (
-  subComponents:
-    | Record<keyof ISubProps, React.FunctionComponent<Props>>
-    | Record<
-        keyof ISubProps,
-        (storesEnv: IStoresEnv<TAnyMSTModel>) => React.FunctionComponent<Props>
-      >
-) => any = (ComponentCurrying, className, defaultProps) => subComponents => {
+) => TComponentCurrying<Props, ISubMap> = (
+  ComponentCurrying,
+  className,
+  defaultProps
+) => subComponents => {
   const ResultComponent = ComponentCurrying(subComponents);
   ResultComponent.displayName = `${className}HOC`;
   return observer(based(observer(ResultComponent), defaultProps));
@@ -182,8 +186,8 @@ const DEFAULT_MODEL_EXTENDER = (model: IAnyModelType) => {
  * TODO: 这里替换 any 返回值
  * @param stores - store 模型实例
  */
-export const initSuits: <Props, ISubProps>(
-  suitConfig: ISuitsConfig<Props, ISubProps>
+export const initSuits: <Props, ISubMap>(
+  suitConfig: ISuitsConfig<Props, ISubMap>
 ) => any = suitConfig => {
   const {
     ComponentCurrying,
@@ -356,3 +360,44 @@ export const initSuits: <Props, ISubProps>(
     ComponentFactory
   };
 };
+
+// ===========================
+
+/**
+ * 通过模块配置项，简化初始化方法调用
+ * @param config - 模块配置项
+ */
+export function initSuitsFromConfig<Props, ISubMap>(
+  ModuleCurrying: TComponentCurrying<Props, ISubMap>,
+  moduleConfig: IModuleConfig<Props, ISubMap>
+) {
+  // 抽离子组件配置项
+  const subComponents = moduleConfig.component.children;
+  const subComponentNames = Object.keys(subComponents);
+  const subStoresModelMap: TRecordObject<
+    keyof typeof subComponents,
+    TAnyMSTModel
+  > = {};
+  const subFactoryMap: TRecordObject<
+    keyof typeof subComponents,
+    TFactoryFunction
+  > = {};
+  subComponentNames.forEach((name: string) => {
+    subStoresModelMap[name] = subComponents[name].storesModel;
+    subFactoryMap[name] = subComponents[name].factory;
+  });
+
+  return initSuits({
+    ComponentCurrying: ModuleCurrying,
+    className: moduleConfig.component.className,
+    solution: moduleConfig.component.solution,
+    defaultProps: moduleConfig.component.defaultProps,
+    controlledKeys: moduleConfig.model.controlledKeys,
+    modelProps: moduleConfig.model.props,
+    subComponents: moduleConfig.component.children,
+    subStoresModelMap: subStoresModelMap,
+    subFactoryMap: subFactoryMap,
+    idPrefix: moduleConfig.store.idPrefix,
+    routerConfig: moduleConfig.router
+  });
+}
