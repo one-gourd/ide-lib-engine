@@ -394,6 +394,7 @@ export function initSuitsFromConfig<Props, ISubMap>(
     defaultProps: moduleConfig.component.defaultProps,
     controlledKeys: moduleConfig.model.controlledKeys,
     modelProps: moduleConfig.model.props,
+    modelExtends: moduleConfig.model.extends,
     subComponents: moduleConfig.component.children,
     subStoresModelMap: subStoresModelMap,
     subFactoryMap: subFactoryMap,
