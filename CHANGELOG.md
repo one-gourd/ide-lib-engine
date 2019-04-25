@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.3](https://github.com/alibaba-paimai-frontend/ide-lib-engine/compare/v0.1.2...v0.1.3) (2019-04-25)
+
+
+### Bug Fixes
+
+* 🐛 初始化配置 ([bef4654](https://github.com/alibaba-paimai-frontend/ide-lib-engine/commit/bef4654))
+* 🐛 响应模型: stores ([b416369](https://github.com/alibaba-paimai-frontend/ide-lib-engine/commit/b416369))
+
+
+### Features
+
+* 🎸 功能完善: 新增方法 ([513fe7e](https://github.com/alibaba-paimai-frontend/ide-lib-engine/commit/513fe7e))
+
+
+
 <a name="0.1.2"></a>
 ## [0.1.2](https://github.com/alibaba-paimai-frontend/ide-lib-engine/compare/v0.1.1...v0.1.2) (2019-04-12)
 
