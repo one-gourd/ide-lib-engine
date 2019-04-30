@@ -12,7 +12,8 @@ const {
   NormalComponent: HeaderBlock,
   ComponentHOC: HeaderBlockHOC,
   ComponentAddStore: HeaderBlockAddStore,
-  ComponentFactory: HeaderBlockFactory
+  ComponentFactory: HeaderBlockFactory,
+  StoresModel: HeaderBlockStoresModel
 } = initSuitsFromConfig(HeaderBlockCurrying, configHeaderBlock);
 
 export {
@@ -20,7 +21,8 @@ export {
   HeaderBlock,
   HeaderBlockHOC,
   HeaderBlockAddStore,
-  HeaderBlockFactory
+  HeaderBlockFactory,
+  HeaderBlockStoresModel
 };
 
 export interface IHeaderBlockModel extends Instance<typeof HeaderBlockModel> {}

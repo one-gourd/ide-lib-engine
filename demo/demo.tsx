@@ -1,13 +1,29 @@
 import * as React from 'react';
 import { render } from 'react-dom';
-import { LibEngine, LibEngineFactory, ILibEngineProps } from './simple/main';
+import {
+  LibEngine,
+  LibEngineModel,
+  LibEngineStoresModel,
+  LibEngineFactory,
+  ILibEngineProps
+} from './simple/main';
 import {
   HeaderBlock,
+  HeaderBlockModel,
   HeaderBlockFactory,
+  HeaderBlockStoresModel,
   IHeaderBlockProps
 } from './has-subs/main';
+
 import { Collapse } from 'antd';
 const Panel = Collapse.Panel;
+
+console.log(
+  'LibEngineStoresModel:',
+  LibEngineStoresModel,
+  '\n HeaderBlockStoresModel:',
+  HeaderBlockStoresModel
+);
 
 const {
   ComponentWithStore: LibEngineWithStore,

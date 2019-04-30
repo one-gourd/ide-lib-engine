@@ -12,11 +12,13 @@ const {
   NormalComponent: LibEngine,
   ComponentHOC: LibEngineHOC,
   ComponentAddStore: LibEngineAddStore,
-  ComponentFactory: LibEngineFactory
+  ComponentFactory: LibEngineFactory,
+  StoresModel: LibEngineStoresModel
 } = initSuitsFromConfig(LibEngineCurrying, configLibEngine);
 
 export {
   LibEngineModel,
+  LibEngineStoresModel,
   LibEngine,
   LibEngineHOC,
   LibEngineAddStore,

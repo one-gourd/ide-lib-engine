@@ -61,13 +61,39 @@ export function createStores(
 export type TStoresModel = ReturnType<typeof createStores>;
 export interface IStoresModel extends Instance<TStoresModel> {}
 
-const cachedStoresMap = new Map<
+export const cachedStoresMap = new Map<
   string,
   {
     store: TStoresModel;
     autoId: number;
   }
 >();
+
+/**
+ *  获取 Stores 对象
+ *  不存在则新建，否则从缓存中获取
+ * （提高性能，如果是相同的 Model，不需要重复创建 Stores 对象）
+ * @export
+ * @param {IAnyModelType} ComponentModel - 模型
+ * @param {string} idPrefix - storeId
+ * @param {Record<string, TAnyMSTModel>} subStoresModelMap - 子 stores map 对象
+ * @returns
+ */
+export function getStoresModelCache(
+  ComponentModel: IAnyModelType,
+  idPrefix: string,
+  subStoresModelMap: Record<string, TAnyMSTModel>
+) {
+  const cached = cachedStoresMap.get(ComponentModel.name) || {
+    store: createStores(ComponentModel, idPrefix, subStoresModelMap),
+    autoId: 0
+  };
+
+  cached.autoId = cached.autoId + 1;
+  cachedStoresMap.set(ComponentModel.name, cached); // 更新缓存
+
+  return cached;
+}
 
 /**
  * 工厂方法，传入 model 创建 stores，同时注入对应子元素的 client 和 app,
@@ -83,21 +109,11 @@ export function StoresFactory<ISubProps>(
     subAppFactoryMap || {}
   );
 
-  /* ----------------------------------------------------
-    获取 Stores 对象
-    不存在则新建，否则从缓存中获取
-    （提高性能，如果是相同的 Model，不需要重复创建 Stores 对象）
------------------------------------------------------ */
-  const cached = cachedStoresMap.get(ComponentModel.name) || {
-    store: createStores(ComponentModel, idPrefix, subStoresModelMap),
-    autoId: 0
-  };
-
-  cached.autoId = cached.autoId + 1;
-  cachedStoresMap.set(ComponentModel.name, cached); // 更新缓存
-
-  const { store: Stores, autoId } = cached;
-  // =======================================
+  const { store: Stores, autoId } = getStoresModelCache(
+    ComponentModel,
+    idPrefix,
+    subStoresModelMap
+  );
 
   // see: https://github.com/mobxjs/mobx-state-tree#dependency-injection
   // 依赖注入，方便在 controller 中可以直接调用子组件的 controller

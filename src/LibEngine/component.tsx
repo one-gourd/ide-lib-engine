@@ -21,7 +21,7 @@ import {
 
 import { debugRender } from '../lib/debug';
 import { createApp } from './controller/index';
-import { StoresFactory } from './schema/stores';
+import { StoresFactory, getStoresModelCache } from './schema/stores';
 import { createModelFromConfig } from './schema/index';
 
 /* ----------------------------------------------------
@@ -141,7 +141,8 @@ export const createStoresEnv: <ISubMap>(
     idPrefix,
     subFactoryMap,
     subStoresModelMap
-  ); // 创建 stores
+  ); // 创建 stores 对象
+
   const app = createApp(
     stores,
     routers,
@@ -352,12 +353,20 @@ export const initSuits: <Props, ISubMap>(
     };
   };
 
+  // 同时获取对应的 StoresModel 对象
+  const storesModelCache = getStoresModelCache(
+    ComponentModel,
+    idPrefix,
+    subStoresModelMap
+  );
+
   return {
+    StoresModel: storesModelCache && storesModelCache.store,
     ComponentModel,
     NormalComponent,
     ComponentHOC,
     ComponentAddStore,
-    ComponentFactory
+    ComponentFactory // 注意，只有外部调用该工厂函数后， `cachedStores` 才会有数据内容
   };
 };
 
