@@ -312,8 +312,8 @@ export const initSuits: <Props, ISubMap>(
 
       return (
         <ComponentHasSubStore
-          {...controlledProps}
-          {...otherPropsWithInjected}
+        {...controlledProps}
+        {...otherPropsWithInjected}  // 其他属性高，表明用于指定传入的属性优先级要高于 store 控制的
         />
       );
     };

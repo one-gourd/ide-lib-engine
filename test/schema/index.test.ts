@@ -1,8 +1,43 @@
-import { types, IAnyModelType, getSnapshot } from 'mobx-state-tree';
+import { types, IAnyModelType, getSnapshot, getMembers } from 'mobx-state-tree';
 import Chance from 'chance';
-import { quickInitModel } from '../../src';
+import { JSONModel, EMPTY_JSON_SNAPSHOT } from 'ide-lib-base-component';
+import { quickInitModel, convertProps, createGetterMethods } from '../../src';
 
 const chance = new Chance();
+
+describe('[util] 工具函数', () => {
+  let props: any;
+  beforeEach(() => {
+    props = {
+      visible: types.optional(types.boolean, true),
+      formData: types.optional(JSONModel, EMPTY_JSON_SNAPSHOT)
+    };
+  });
+
+  describe('[convertProps] 根据 prop 类型转换成名字 ', () => {
+    test('如果是 JSONModel 模型添加 `_` 前缀', () => {
+      const converted = convertProps(props);
+      expect(converted.hasOwnProperty('visible')).toBeTruthy();
+      expect(converted.hasOwnProperty('formData')).toBeFalsy();
+      expect(converted.hasOwnProperty('_formData')).toBeTruthy();
+    });
+  });
+  describe('[createGetterMethods] 根据 prop 类型获取 get 描述符 ', () => {
+    test('如果是 JSONModel 模型返回 getter 方法', () => {
+      const getters = createGetterMethods(
+        {
+          _formData: {
+            value: 333
+          }
+        },
+        props
+      );
+      expect(getters.hasOwnProperty('visible')).toBeFalsy();
+      expect(getters.hasOwnProperty('formData')).toBeTruthy();
+      expect(getters.formData).toBe(333);
+    });
+  });
+});
 
 describe('[quickInitModel] 根据配置项创建 schema ', () => {
   let Schema: IAnyModelType, modelName: string;
@@ -10,8 +45,17 @@ describe('[quickInitModel] 根据配置项创建 schema ', () => {
     modelName = chance.word();
     Schema = quickInitModel(modelName, {
       visible: types.optional(types.boolean, true),
-      text: types.optional(types.string, 'hello')
+      text: types.optional(types.string, 'hello'),
+      formData: types.optional(JSONModel, EMPTY_JSON_SNAPSHOT)
     });
+  });
+
+  test('对 JSONModel 的属性有特殊处理', () => {
+    const names = (Schema as any).propertyNames;
+    expect(!!~names.indexOf('_formData')).toBeTruthy();
+    expect(!!~names.indexOf('formData')).toBeFalsy();
+    expect(!!~names.indexOf('visible')).toBeTruthy();
+    expect(!!~names.indexOf('text')).toBeTruthy();
   });
 
   test('基本使用，支持默认值', () => {
@@ -19,15 +63,55 @@ describe('[quickInitModel] 根据配置项创建 schema ', () => {
     expect(Schema.name).toBe(modelName);
     expect(schema.visible).toBeTruthy();
     expect(schema.text).toBe('hello');
+
+    // 对 JSON Model 有特殊的属性
+    expect(schema._formData).toEqual(EMPTY_JSON_SNAPSHOT);
+    expect(schema.formData).toEqual({});
+
+    const members = getMembers(schema);
+    expect(!!~members.views.indexOf('formData')).toBeTruthy();
+    expect(!!~members.actions.indexOf('setFormData')).toBeTruthy();
   });
 
   test('拥有 set 属性方法', () => {
     const schema = Schema.create();
     schema.setVisible(false);
     schema.setText('good');
+    // console.log(222, getMembers(schema._formData));
+    const objData = { a: 1 };
+    schema.setFormData(objData);
 
     expect(schema.visible).toBeFalsy();
     expect(schema.text).toBe('good');
+    expect(schema.formData).toEqual(objData);
+  });
+
+  test('JSON Modal 的初始化比较特殊，推荐初始化后再调用 setXX 方法', () => {
+    const objData = { c: 2 };
+
+    // 以下两种方式都不行哦！！
+    const schema1 = Schema.create({
+      formData: objData
+    });
+    expect(schema1.formData).toEqual({});
+
+    const schema2 = Schema.create({
+      _formData: objData
+    });
+    expect(schema2.formData).toEqual({});
+
+    // 这样才行
+    const schema3 = Schema.create({
+      _formData: {
+        _value: JSON.stringify(objData)
+      }
+    });
+    expect(schema3.formData).toEqual(objData);
+
+    // 或者这样，推荐这种做法
+    const schema4 = Schema.create();
+    schema4.setFormData(objData);
+    expect(schema4.formData).toEqual(objData);
   });
 
   test('对 bool 兼容字符 "true"', () => {
@@ -43,18 +127,33 @@ describe('[quickInitModel] 根据配置项创建 schema ', () => {
   });
 
   test('allAttibuteWithFilter - 获取指定属性', () => {
-    const schema = Schema.create();
+    const schema = Schema.create({
+      _formData: { c: 2 }
+    });
+
+    expect(schema.allAttibuteWithFilter('formData')).toEqual({
+      formData: {}
+    });
+
+    const objData = { a: 1 };
+    schema.setFormData(objData);
 
     expect(schema.allAttibuteWithFilter()).toEqual({
       visible: true,
-      text: 'hello'
+      text: 'hello',
+      formData: objData
     });
+
     expect(schema.allAttibuteWithFilter('visible')).toEqual({
       visible: true
     });
 
     expect(schema.allAttibuteWithFilter('text')).toEqual({
       text: 'hello'
+    });
+
+    expect(schema.allAttibuteWithFilter('formData')).toEqual({
+      formData: objData
     });
 
     expect(schema.allAttibuteWithFilter(['visible', 'text'])).toEqual({
@@ -66,12 +165,15 @@ describe('[quickInitModel] 根据配置项创建 schema ', () => {
   });
 
   test('updateAttribute - 更新指定属性', () => {
+    const objData = { c: 2 };
     const schema = Schema.create();
     schema.updateAttribute('visible', false);
     schema.updateAttribute('text', 'good');
+    schema.updateAttribute('formData', objData);
 
     expect(schema.visible).toBeFalsy();
     expect(schema.text).toBe('good');
+    expect(schema.formData).toEqual(objData);
   });
 
   describe('支持子 model 的情况', () => {

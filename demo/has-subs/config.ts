@@ -7,6 +7,8 @@ import { showConsole } from './solution';
 
 import { subComponents, ISubProps } from './subs';
 
+import { PropsEditorModel } from './model';
+
 import { router as GetRouter } from './router/get';
 import { router as PostRouter } from './router/post';
 import { router as PutRouter } from './router/put';
@@ -40,7 +42,10 @@ export const configHeaderBlock: IModuleConfig<IHeaderBlockProps, ISubProps> = {
     controlledKeys: [], // 后续再初始化
     props: {
       visible: types.optional(types.boolean, true),
-      text: types.optional(types.string, '')
+      text: types.optional(types.string, ''),
+
+      propsEditor: PropsEditorModel
+
       // language: types.optional(
       //   types.enumeration('Type', CODE_LANGUAGES),
       //   ECodeLanguage.JS

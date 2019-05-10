@@ -1,11 +1,13 @@
 import React, { useCallback } from 'react';
-import { Button } from 'antd';
+import { Button, Input } from 'antd';
 import { IBaseTheme, IBaseComponentProps } from 'ide-lib-base-component';
 
 import { TComponentCurrying } from '../../src';
 
 import { StyledContainer } from './styles';
 import { ISubProps } from './subs';
+
+const TextArea = Input.TextArea;
 
 export interface IHeaderBlockEvent {
   /**
@@ -17,6 +19,12 @@ export interface IHeaderBlockEvent {
 // export interface IHeaderBlockStyles extends IBaseStyles {
 //   container?: React.CSSProperties;
 // }
+
+export interface IAttributeEditorProps {
+  pageStore?: any;
+  formData?: any;
+  schema?: any;
+}
 
 export interface IHeaderBlockTheme extends IBaseTheme {
   main: string;
@@ -35,6 +43,11 @@ export interface IHeaderBlockProps
    * 文案
    */
   text?: string;
+
+  /**
+   * 属性编辑器（可 model）
+   */
+  propsEditor?: IAttributeEditorProps;
 }
 
 export const DEFAULT_PROPS: IHeaderBlockProps = {
@@ -60,7 +73,7 @@ export const HeaderBlockCurrying: TComponentCurrying<
   IHeaderBlockProps,
   ISubProps
 > = subComponents => props => {
-  const { headerBar, visible, text, styles, onClick } = props;
+  const { headerBar, visible, text, styles, onClick, propsEditor = {} } = props;
   const { HeaderBar } = subComponents as Record<
     string,
     React.FunctionComponent<typeof props>
@@ -72,6 +85,10 @@ export const HeaderBlockCurrying: TComponentCurrying<
     },
     [onClick]
   );
+  
+  const areaText = `formData: ${JSON.stringify(
+    propsEditor.formData
+  )} \n\n schema:  ${JSON.stringify(propsEditor.schema)}`;
 
   return (
     <StyledContainer
@@ -82,6 +99,8 @@ export const HeaderBlockCurrying: TComponentCurrying<
     >
       <Button onClick={onClickButton}>{text || '点我试试'}</Button>
       <HeaderBar {...headerBar} />
+
+      <TextArea autosize={true} value={areaText} />
     </StyledContainer>
   );
 };
