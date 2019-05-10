@@ -16,7 +16,8 @@ import {
   IAliasRoute,
   IAliasRule,
   ValueOf,
-  IAnyModelInstance
+  IAnyModelInstance,
+  IBaseComponentProps
 } from 'ide-lib-base-component';
 
 import { debugRender } from '../lib/debug';
@@ -164,11 +165,11 @@ export const createStoresEnv: <ISubMap>(
  * 使用高阶组件打造的组件生成器
  * @param subComponents - 子组件列表
  */
-const createComponentHOC: <Props, ISubMap>(
+const createComponentHOC: <Props , ISubMap>(
   ComponentCurrying: ISuitsConfig<Props, ISubMap>['ComponentCurrying'],
   className: string,
   defaultProps: Props
-) => TComponentCurrying<Props, ISubMap> = (
+) => TComponentCurrying<any, ISubMap> = (
   ComponentCurrying,
   className,
   defaultProps
@@ -187,7 +188,7 @@ const DEFAULT_MODEL_EXTENDER = (model: IAnyModelType) => {
  * TODO: 这里替换 any 返回值
  * @param stores - store 模型实例
  */
-export const initSuits: <Props, ISubMap>(
+export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
   suitConfig: ISuitsConfig<Props, ISubMap>
 ) => any = suitConfig => {
   const {
@@ -264,7 +265,9 @@ export const initSuits: <Props, ISubMap>(
   // 创建 ComponentAddStore
   const ComponentAddStore: (
     storesEnv: any
-  ) => React.FunctionComponent<typeof defaultProps> = storesEnv => {
+  ) => React.FunctionComponent<
+    Omit<typeof defaultProps, typeof controlledKeys>
+  > = storesEnv => {
     const { stores } = storesEnv;
 
     const addStoreComponents = {} as any;
@@ -312,8 +315,8 @@ export const initSuits: <Props, ISubMap>(
 
       return (
         <ComponentHasSubStore
-        {...controlledProps}
-        {...otherPropsWithInjected}  // 其他属性高，表明用于指定传入的属性优先级要高于 store 控制的
+          {...controlledProps}
+          {...otherPropsWithInjected} // 其他属性高，表明用于指定传入的属性优先级要高于 store 控制的
         />
       );
     };
