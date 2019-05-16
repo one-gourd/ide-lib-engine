@@ -5,6 +5,8 @@ import {
   IAnyModelInstance
 } from 'ide-lib-base-component';
 
+import { capitalize } from 'ide-lib-utils';
+
 import { IAnyModelType } from 'mobx-state-tree';
 
 let mId = 1;
@@ -27,6 +29,25 @@ export function createModel<Props extends IBaseComponentProps>(
   });
   model.setStyles(styles || {});
   model.setTheme(theme);
+
+  // 解决 JSONModel 中默认值不一致的问题
+  const otherControlledKeyMap = (ComponentModel as any)[
+    '_otherControlledKeyMap'
+  ];
+  if (otherControlledKeyMap) {
+    for (const subPropName in otherControlledKeyMap) {
+      // 限定范围，在 otherProps 中
+      if (
+        otherControlledKeyMap.hasOwnProperty(subPropName) &&
+        otherProps[subPropName]
+      ) {
+        model[`set${capitalize(subPropName)}`](otherProps[subPropName]);
+        // console.log(999, model[subPropName].formData);
+        // const otherKeys = otherControlledKeyMap[subPropName];
+        // otherProps[subPropName] = pick(model[subPropName], otherKeys);
+      }
+    }
+  }
 
   return model;
 }

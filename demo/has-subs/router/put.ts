@@ -5,7 +5,10 @@ import {
   buildNormalResponse
 } from 'ide-lib-base-component';
 
+import { otherControlledKeyMap, mergeRule } from '../model';
+
 import { IContext } from './helper';
+import { mergeWithLevel } from 'ide-lib-utils';
 
 export const router = new Router();
 // 更新单项属性
@@ -15,29 +18,29 @@ router.put('updateModel', '/model', function(ctx: IContext) {
 
   //   stores.setSchema(createSchemaModel(schema));
   const originValue = stores.model[name];
-  const isSuccess = stores.model.updateAttribute(name, value);
+
+  // 如果是有 mergeRule 的属性，需要额外的操作
+  const pickedOrigin = {};
+  let targetValue = value;
+  if (otherControlledKeyMap[name]) {
+    otherControlledKeyMap[name].forEach((keyName: string) => {
+      pickedOrigin[keyName] = originValue[keyName];
+    });
+  }
+
+  // 是否有对应的 merge 规则
+  if (mergeRule[name]) {
+    targetValue = mergeWithLevel(pickedOrigin, value, mergeRule[name].level);
+  }
+
+  // console.log(999, pickedOrigin, value, mergeRule[name]);
+  const isSuccess = stores.model.updateAttribute(name, targetValue);
 
   buildNormalResponse(
     ctx,
     200,
     { success: isSuccess, origin: originValue },
-    `属性 ${name} 的值从 ${originValue} -> ${value} 的变更的操作: ${isSuccess}`
-  );
-});
-
-// TODO: 拓展，如果是 `propsEditor` 因为是 JSON model，还可以继续延续下去
-router.put('updatePropsEditor', '/model/propsEditor', function(ctx: IContext) {
-  const { stores, request } = ctx;
-  const { name, value } = request.data;
-  const originValue = stores.model.propsEditor[name];
-
-  const isSuccess = stores.model.propsEditor.updateAttribute(name, value);
-
-  buildNormalResponse(
-    ctx,
-    200,
-    { success: isSuccess, origin: originValue },
-    `属性 ${name} 的值从 ${originValue} -> ${value} 的变更: ${isSuccess}`
+    `属性 ${name} 的值从 ${originValue} -> ${targetValue} 的变更的操作: ${isSuccess}`
   );
 });
 

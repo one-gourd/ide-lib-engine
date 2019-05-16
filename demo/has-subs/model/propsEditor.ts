@@ -3,7 +3,7 @@ import {
   types,
   Instance,
   IAnyModelType,
-  SnapshotOrInstance,
+  SnapshotOrInstance
 } from 'mobx-state-tree';
 
 import { quickInitModel } from '../../../src/';
@@ -19,7 +19,6 @@ export const PropsEditorModel: IAnyModelType = quickInitModel(
     formData: JSONModel // 属性值
   }
 );
-
 
 // const bb = types.model('xxx', {
 //     _schema: JSONModel, // 属性 schema 描述
@@ -51,6 +50,7 @@ export const PropsEditorModel: IAnyModelType = quickInitModel(
 //     };
 //   })
 
+export const CONTROLLED_KEYS_PROPSEDITOR = ['schema', 'formData'];
 
 export interface IPropsEditorModel extends Instance<typeof PropsEditorModel> {}
 export interface IPropsEditorModelSnapshot

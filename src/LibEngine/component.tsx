@@ -2,7 +2,7 @@ import React from 'react';
 import Router from 'ette-router';
 import { IAnyModelType, IAnyType } from 'mobx-state-tree';
 import { observer } from 'mobx-react-lite';
-import { pick, invariant } from 'ide-lib-utils';
+import { pick, invariant, IMergeRule } from 'ide-lib-utils';
 import {
   based,
   Omit,
@@ -16,7 +16,7 @@ import {
   IAliasRoute,
   IAliasRule,
   ValueOf,
-  IAnyModelInstance,
+  IBaseConfig,
   IBaseComponentProps
 } from 'ide-lib-base-component';
 
@@ -46,6 +46,7 @@ export declare interface IComponentConfig<Props, ISubMap> {
   className: string;
   solution?: TRecordObject<string, TAnyFunction[]>;
   defaultProps?: Props;
+  mergeRule?: IMergeRule;
   children?: TRecordObject<
     keyof ISubMap,
     IComponentConfig<ValueOf<ISubMap>, any>
@@ -75,6 +76,7 @@ export declare interface IModuleConfig<Props, ISubMap> {
   };
   model: {
     controlledKeys: string[];
+    otherControlledKeyMap?: { [key: string]: string[] };
     props: TRecordObject<string, IAnyType>;
     extends?: (model: IAnyModelType) => IAnyModelType;
   };
@@ -95,11 +97,16 @@ export interface ISuitsConfig<Props, ISubMap> {
   className: string;
   solution: IComponentConfig<Props, ISubMap>['solution'];
   defaultProps: Props;
+  mergeRule?: IMergeRule;
   idPrefix: string;
   subComponents: TRecordObject<keyof ISubMap, IComponentConfig<Props, ISubMap>>;
   modelProps: TRecordObject<string, IAnyType>;
   modelExtends?: (model: IAnyModelType) => IAnyModelType;
-  controlledKeys: string[];
+  controlledKeys: IModuleConfig<Props, ISubMap>['model']['controlledKeys'];
+  otherControlledKeyMap?: IModuleConfig<
+    Props,
+    ISubMap
+  >['model']['otherControlledKeyMap'];
   subFactoryMap: TSubFactoryMap<ISubMap>;
   subStoresModelMap: TRecordObject<keyof ISubMap, TAnyMSTModel>;
   routerConfig: IModuleConfig<Props, ISubMap>['router'];
@@ -165,18 +172,20 @@ export const createStoresEnv: <ISubMap>(
  * 使用高阶组件打造的组件生成器
  * @param subComponents - 子组件列表
  */
-const createComponentHOC: <Props , ISubMap>(
+const createComponentHOC: <Props, ISubMap>(
   ComponentCurrying: ISuitsConfig<Props, ISubMap>['ComponentCurrying'],
   className: string,
-  defaultProps: Props
+  defaultProps: Props,
+  config: IBaseConfig
 ) => TComponentCurrying<any, ISubMap> = (
   ComponentCurrying,
   className,
-  defaultProps
+  defaultProps,
+  config = {}
 ) => subComponents => {
   const ResultComponent = ComponentCurrying(subComponents);
   ResultComponent.displayName = `${className}HOC`;
-  return observer(based(observer(ResultComponent), defaultProps));
+  return observer(based(observer(ResultComponent), defaultProps, config));
 };
 
 const DEFAULT_MODEL_EXTENDER = (model: IAnyModelType) => {
@@ -195,8 +204,10 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
     ComponentCurrying,
     className,
     defaultProps,
+    mergeRule = {},
     subComponents,
     controlledKeys,
+    otherControlledKeyMap,
     modelProps,
     modelExtends = DEFAULT_MODEL_EXTENDER,
     solution,
@@ -207,11 +218,17 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
   } = suitConfig;
   // 创建普通的函数
 
+  // 创建 based config ，可以指定融合层级
+  const basedConfig = {
+    mergeRule
+  };
+
   // 创建 ComponentHOC
   const ComponentHOC = createComponentHOC(
     ComponentCurrying,
     className,
-    defaultProps
+    defaultProps,
+    basedConfig
   );
 
   // 构造 normal 组件集合
@@ -302,6 +319,20 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
       const controlledProps = pick(model, controlledKeys);
       debugRender(`[${(stores as any).id}] rendering`);
 
+      // 对 controlledProps 再进行一层 model pick
+      // 比如对 propsEditor: {_schema: JSONModel} 指定提取 `schema` 字段
+      if (otherControlledKeyMap) {
+        for (const subPropName in otherControlledKeyMap) {
+          // 限定范围，在 controlledProps 中
+          if (
+            otherControlledKeyMap.hasOwnProperty(subPropName) &&
+            controlledProps[subPropName]
+          ) {
+            const otherKeys = otherControlledKeyMap[subPropName];
+            controlledProps[subPropName] = pick(model[subPropName], otherKeys);
+          }
+        }
+      }
       const otherPropsWithInjected = useInjectedEvents<
         typeof props,
         typeof stores
@@ -333,6 +364,8 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
   // 给 model 随身带上 _defaultProps 属性，让初始化 model 的时候，view 和 model 数据保持一致
   // 否则默认创建的 model 中的 `style`、`theme` 属性都是空对象
   (ComponentModel as any)['_defaultProps'] = defaultProps;
+  // 解决模型中的 JSONModel 的初始化为空对象的问题
+  (ComponentModel as any)['_otherControlledKeyMap'] = otherControlledKeyMap;
 
   /**
    * 工厂函数，每调用一次就获取一副 MVC
@@ -404,7 +437,9 @@ export function initSuitsFromConfig<Props, ISubMap>(
     className: moduleConfig.component.className,
     solution: moduleConfig.component.solution,
     defaultProps: moduleConfig.component.defaultProps,
+    mergeRule: moduleConfig.component.mergeRule,
     controlledKeys: moduleConfig.model.controlledKeys,
+    otherControlledKeyMap: moduleConfig.model.otherControlledKeyMap,
     modelProps: moduleConfig.model.props,
     modelExtends: moduleConfig.model.extends,
     subComponents: moduleConfig.component.children,

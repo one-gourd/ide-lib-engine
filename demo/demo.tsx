@@ -90,15 +90,24 @@ client.post('/model', {
 
 // 测试 JSON 格式属性
 setTimeout(() => {
-  clientHeaderBlock.put('/model/propsEditor', {
-    name: 'formData',
-    value: {
-      a: 1,
-      b: 3
-    }
-  });
+  clientHeaderBlock
+    .put('/model', {
+      name: 'propsEditor',
+      value: {
+        formData: {
+          a: 1,
+          b: 3
+        },
+        schema: { c: 4 }
+      }
+    })
+    .then(() => {
+      clientHeaderBlock.get('/model?filter=propsEditor').then(res => {
+        console.log(
+          555,
+          res.body.data.attributes.propsEditor.formData,
+          res.body.data.attributes.propsEditor.schema
+        );
+      });
+    });
 }, 2000);
-
-clientHeaderBlock.get('/model?filter=propsEditor').then(res=>{
-  console.log(555, res.body.data.attributes);
-});

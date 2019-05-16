@@ -55,6 +55,9 @@ export const DEFAULT_PROPS: IHeaderBlockProps = {
   theme: {
     main: '#25ab68'
   },
+  // propsEditor: {
+  //   formData: { c: 2 }
+  // },
   headerBar: {
     buttons: [
       {
@@ -85,7 +88,7 @@ export const HeaderBlockCurrying: TComponentCurrying<
     },
     [onClick]
   );
-  
+
   const areaText = `formData: ${JSON.stringify(
     propsEditor.formData
   )} \n\n schema:  ${JSON.stringify(propsEditor.schema)}`;
