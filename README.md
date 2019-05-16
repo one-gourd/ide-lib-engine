@@ -35,7 +35,7 @@ web 方式：
 
 首先从 git 仓库拉取代码，安装依赖项：
 ```shell
-git clone https://github.com/alibaba-paimai-frontend/ide-lib-engine.git
+git clone https://github.com/one-gourd/ide-lib-engine.git
 
 npm install
 

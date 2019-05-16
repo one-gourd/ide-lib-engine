@@ -7,10 +7,10 @@
   "browser": "dist/index.umd.js",
   "typings": "dist/index.d.ts",
   "sideEffects": false,
-  "homepage": "https://alibaba-paimai-frontend.github.io/ide-lib-engine",
+  "homepage": "https://one-gourd.github.io/ide-lib-engine",
   "repository": {
     "type": "git",
-    "url": "https://github.com/alibaba-paimai-frontend/ide-lib-engine.git"
+    "url": "https://github.com/one-gourd/ide-lib-engine.git"
   },
   "scripts": {
     "test": "./node_modules/.bin/jest",
