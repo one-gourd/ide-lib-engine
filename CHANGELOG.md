@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.5](https://github.com/one-gourd/ide-lib-engine/compare/v0.1.4...v0.1.5) (2019-05-21)
+
+
+### Bug Fixes
+
+* 🐛 类型声明 ([b56f902](https://github.com/one-gourd/ide-lib-engine/commit/b56f902))
+
+
+### Features
+
+* 🎸 功能新增: advanceMerge ([32be3db](https://github.com/one-gourd/ide-lib-engine/commit/32be3db))
+* 🎸 功能新增: 支持 JSONMoel 特殊类型 ([6191778](https://github.com/one-gourd/ide-lib-engine/commit/6191778))
+
+
+
 ## [0.1.4](https://github.com/alibaba-paimai-frontend/ide-lib-engine/compare/v0.1.3...v0.1.4) (2019-04-30)
 
 
