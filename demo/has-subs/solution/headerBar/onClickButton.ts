@@ -8,12 +8,12 @@ import { IStoresModel } from '../../../../src';
  * 显示 list 列表项
  * @param env - IStoresEnv
  */
-export const showConsole = (env: IStoresEnv<IStoresModel>) => async (
+export const showButtonConsole = (env: IStoresEnv<IStoresModel>) => async (
   key: string,
   keyPath: Array<string>,
   item: any
 ) => {
   const { stores, client } = env;
-  console.log('[solution] from self:', key);
+  console.log('[solution] from headBar:', key);
   // stores.model.setVisible(true); // 可见
 };

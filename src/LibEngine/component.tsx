@@ -216,7 +216,10 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
     subFactoryMap,
     subStoresModelMap
   } = suitConfig;
-  // 创建普通的函数
+
+  // 从 subComponents 中提取列表 keys 和 values
+  const subComponentValues = Object.values(subComponents);
+  const subComponentKeys = Object.keys(subComponents);
 
   // 创建 based config ，可以指定融合层级
   const basedConfig = {
@@ -253,7 +256,7 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
     });
 
   // 装备组件集合、路由规则
-  Object.values(subComponents).map(
+  subComponentValues.map(
     (
       subComponent: IComponentConfig<
         typeof defaultProps,
@@ -289,7 +292,7 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
 
     const addStoreComponents = {} as any;
 
-    Object.values(subComponents).map(
+    subComponentValues.map(
       (
         subComponent: IComponentConfig<
           typeof defaultProps,
@@ -333,6 +336,39 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
           }
         }
       }
+
+      /* ----------------------------------------------------
+          note: 对子组件也进行 injectedEvents 操作
+      ----------------------------------------------------- */
+      const subComponentInjected: {
+        [key: string]: TRecordObject<string, TAnyFunction[]>;
+      } = {};
+      subComponentValues.forEach(
+        (
+          subComponent: IComponentConfig<
+            typeof defaultProps,
+            keyof typeof subFactoryMap
+          >
+        ) => {
+          invariant(
+            !!subComponent.namedAs,
+            `[ComponentWithStore] ${
+              subComponent.className
+            } 配置项中缺少 'namedAs' 字段，无法通过 useInjectedEvents 给组件注入 solution`
+          );
+          const subSolutions = subComponent.solution;
+          if (!!subSolutions) {
+            const subProps = props[subComponent.namedAs] || {};
+            const subPropsWithInjected = useInjectedEvents<
+              typeof subProps,
+              typeof subComponent.storesModel
+            >(storesEnv, subProps, subSolutions);
+            subComponentInjected[subComponent.namedAs] = subPropsWithInjected;
+          }
+        }
+      );
+      // =========
+
       const otherPropsWithInjected = useInjectedEvents<
         typeof props,
         typeof stores
@@ -346,6 +382,7 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
 
       return (
         <ComponentHasSubStore
+          {...subComponentInjected}
           {...controlledProps}
           {...otherPropsWithInjected} // 其他属性高，表明用于指定传入的属性优先级要高于 store 控制的
         />

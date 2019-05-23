@@ -66,13 +66,13 @@ const props: ILibEngineProps = {
 render(
   <Collapse defaultActiveKey={['3']}>
     <Panel header="简单组件" key="0">
-      {/* <LibEngine {...props} onClick={onClick} /> */}
+      <LibEngine {...props} onClick={onClick} />
     </Panel>
     <Panel header="简单组件 - 包含 store 功能" key="1">
-      {/* <LibEngineWithStore onClick={onClickWithStore(client, true)} /> */}
+      <LibEngineWithStore onClick={onClickWithStore(client, true)} />
     </Panel>
     <Panel header="含子组件" key="2">
-      {/* <HeaderBlock {...props} onClick={onClick} /> */}
+      <HeaderBlock {...props} onClick={onClick} />
     </Panel>
     <Panel header="含子组件 - 包含 store 功能" key="3">
       <HeaderBlockWithStore onClick={onClickWithStore(clientHeaderBlock)} />

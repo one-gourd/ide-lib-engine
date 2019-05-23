@@ -8,6 +8,7 @@ import {
 } from 'ide-header-bar';
 
 import { IComponentConfig, ValueOf } from '../../src';
+import { showButtonConsole } from './solution';
 
 // model + control: 枚举子属性
 // export enum ESubApps {
@@ -33,6 +34,9 @@ export const subComponents: Record<
     addStore: HeaderBarAddStore,
     storesModel: HeaderBarStores,
     factory: HeaderBarFactory,
+    solution: {
+      onClickButton: [showButtonConsole]
+    },
     routeScope: ['headerbar'] // 能通过父组件访问到的路径
   }
 };
