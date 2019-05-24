@@ -362,7 +362,7 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
             const subPropsWithInjected = useInjectedEvents<
               typeof subProps,
               typeof subComponent.storesModel
-            >(storesEnv, subProps, subSolutions);
+            >(storesEnv, subProps, subSolutions || {});
             subComponentInjected[subComponent.namedAs] = subPropsWithInjected;
           }
         }
@@ -382,9 +382,9 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
 
       return (
         <ComponentHasSubStore
-          {...subComponentInjected}
-          {...controlledProps}
-          {...otherPropsWithInjected} // 其他属性高，表明用于指定传入的属性优先级要高于 store 控制的
+        {...controlledProps}
+        {...otherPropsWithInjected} // 其他属性高，表明用于指定传入的属性优先级要高于 store 控制的
+        {...subComponentInjected} // 其他子组件属性功能优先级更高
         />
       );
     };
