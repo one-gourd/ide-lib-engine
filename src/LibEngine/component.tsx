@@ -219,7 +219,7 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
 
   // 从 subComponents 中提取列表 keys 和 values
   const subComponentValues = Object.values(subComponents);
-  const subComponentKeys = Object.keys(subComponents);
+  // const subComponentKeys = Object.keys(subComponents);
 
   // 创建 based config ，可以指定融合层级
   const basedConfig = {
