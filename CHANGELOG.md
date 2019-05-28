@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.6](https://github.com/one-gourd/ide-lib-engine/compare/v0.1.5...v0.1.6) (2019-05-28)
+
+
+### Bug Fixes
+
+* 🐛 修复 subComponentInjected 在子组件中失效的问题 ([00cd96d](https://github.com/one-gourd/ide-lib-engine/commit/00cd96d))
+
+
+### Features
+
+* 🎸 功能新增: subComponentInjected ([024eab7](https://github.com/one-gourd/ide-lib-engine/commit/024eab7))
+
+
+
 ## [0.1.5](https://github.com/one-gourd/ide-lib-engine/compare/v0.1.4...v0.1.5) (2019-05-21)
 
 
