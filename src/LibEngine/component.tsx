@@ -322,20 +322,6 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
       const controlledProps = pick(model, controlledKeys);
       debugRender(`[${(stores as any).id}] rendering`);
 
-      // 对 controlledProps 再进行一层 model pick
-      // 比如对 propsEditor: {_schema: JSONModel} 指定提取 `schema` 字段
-      if (otherControlledKeyMap) {
-        for (const subPropName in otherControlledKeyMap) {
-          // 限定范围，在 controlledProps 中
-          if (
-            otherControlledKeyMap.hasOwnProperty(subPropName) &&
-            controlledProps[subPropName]
-          ) {
-            const otherKeys = otherControlledKeyMap[subPropName];
-            controlledProps[subPropName] = pick(model[subPropName], otherKeys);
-          }
-        }
-      }
 
       /* ----------------------------------------------------
           note: 对子组件也进行 injectedEvents 操作
@@ -380,11 +366,32 @@ export const initSuits: <Props extends IBaseComponentProps, ISubMap>(
         otherPropsWithInjected.onModelChange
       );
 
+      // 如果有 otherControlledKeyMap，需要继续深层融合 controlledProps 和 otherPropsWithInjected 
+      // 优先级级别：
+      //  1. 组件上 props 指定的属性优先级要高于 store 控制的
+      //  2. otherControlledKeyMap 指定的 store 属性高于 props 属性
+      const mergedProps = Object.assign({}, controlledProps, otherPropsWithInjected);
+      // 对 controlledProps 再进行一层 model pick
+      // 比如对 propsEditor: {_schema: JSONModel} 指定提取 `schema` 字段
+      if (otherControlledKeyMap) {
+        for (const subPropName in otherControlledKeyMap) {
+          // 限定范围，在 controlledProps 中
+          if (
+            otherControlledKeyMap.hasOwnProperty(subPropName) &&
+            mergedProps[subPropName]
+          ) {
+            const otherKeys = otherControlledKeyMap[subPropName];
+            // 融合原数值和指定数值
+            mergedProps[subPropName] = Object.assign({}, mergedProps[subPropName], pick(model[subPropName], otherKeys));
+          }
+        }
+      }
+
       return (
         <ComponentHasSubStore
-        {...controlledProps}
-        {...otherPropsWithInjected} // 其他属性高，表明用于指定传入的属性优先级要高于 store 控制的
-        {...subComponentInjected} // 其他子组件属性功能优先级更高
+          {...mergedProps}
+        // {...otherPropsWithInjected} // 其他属性高，表明用于指定传入的属性优先级要高于 store 控制的
+          {...subComponentInjected} // 其他子组件属性功能优先级更高
         />
       );
     };

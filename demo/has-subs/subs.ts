@@ -6,8 +6,9 @@ import {
   DEFAULT_PROPS as DEFAULT_PROPS_HEADER_BAR,
   HeaderBarFactory
 } from 'ide-header-bar';
+import { ValueOf } from 'ide-lib-base-component';
 
-import { IComponentConfig, ValueOf } from '../../src';
+import { IComponentConfig } from '../../src';
 import { showButtonConsole } from './solution';
 
 // model + control: 枚举子属性

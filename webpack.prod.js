@@ -32,6 +32,7 @@ module.exports = common.map(config => {
       ],
       output: {
         filename: 'index.umd.js',
+        chunkFilename: '[name].bundle.js',
         libraryTarget: 'umd',
         library: 'ideLibEngine',
         path: path.resolve(__dirname, 'dist'),

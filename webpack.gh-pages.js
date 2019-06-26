@@ -5,7 +5,6 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-
 const path = require('path');
 const { getExternal } = require('./webpack-helper');
 
@@ -31,11 +30,12 @@ module.exports = common.map(config => {
       }),
       new webpack.DefinePlugin({
         'process.env.NODE_ENV': JSON.stringify('production')
-      }),
+      })
     ],
     output: {
       filename: 'demo.js',
       path: path.resolve(__dirname, targetDir),
+      chunkFilename: '[name].bundle.js',
       libraryTarget: 'umd',
       library: 'ideLibEngineDemo',
       umdNamedDefine: true
