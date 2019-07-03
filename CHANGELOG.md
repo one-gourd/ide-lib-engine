@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.8](https://github.com/one-gourd/ide-lib-engine/compare/v0.1.7...v0.1.8) (2019-07-03)
+
+
+### Features
+
+* 🎸 功能新增: 中间件新增 cstate 缓存对象 ([41a0c4c](https://github.com/one-gourd/ide-lib-engine/commit/41a0c4c))
+
+
+
 ## [0.1.7](https://github.com/one-gourd/ide-lib-engine/compare/v0.1.6...v0.1.7) (2019-07-01)
 
 
