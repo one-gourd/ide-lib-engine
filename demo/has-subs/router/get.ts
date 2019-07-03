@@ -1,7 +1,6 @@
 import Router from 'ette-router';
 import { 
-  buildNormalResponse } from 'ide-lib-base-component';
-
+  buildNormalResponse, getCStateMiddleware } from 'ide-lib-base-component';
 
 import { IContext } from './helper';
 
@@ -16,3 +15,5 @@ router.get('getModelInstance', '/model', function (ctx: IContext) {
   buildNormalResponse(ctx, 200, { attributes: stores.model.allAttibuteWithFilter(filterArray) });
 });
 
+// 获取 cstate 属性
+router.get('getCState', '/model/cstate', getCStateMiddleware);

@@ -2,7 +2,8 @@ import Router from 'ette-router';
 import {
   updateStylesMiddleware,
   updateThemeMiddleware,
-  buildNormalResponse
+  buildNormalResponse,
+  updateCStateMiddleware
 } from 'ide-lib-base-component';
 
 import { otherControlledKeyMap, mergeRule } from '../model';
@@ -43,6 +44,9 @@ router.put('updateModel', '/model', function(ctx: IContext) {
     `属性 ${name} 的值从 ${originValue} -> ${targetValue} 的变更的操作: ${isSuccess}`
   );
 });
+
+// 更新 cstate 属性
+router.put('updateCstate', '/model/cstate', updateCStateMiddleware);
 
 // 更新 css 属性
 router.put(

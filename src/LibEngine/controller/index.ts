@@ -23,11 +23,19 @@ export const createApp = function(
 ) {
   const app = new Application({ domain: domain });
   app.innerApps = innerApps; // 新增 innerApps 的挂载
+  
+  // 新增共享状态属性
+  const cstate = {};
 
   // 挂载 stores 到上下文中，注意这里的 next 必须要使用 async，否则 proxy 的时候将出现异步偏差
   app.use(async (ctx: any, next: any) => {
     ctx.stores = stores;
     ctx.innerApps = innerApps;
+
+    // 共享状态属性用于非组件状态的信息共享
+    // 这个属性是为了解决必要关键信息共享的问题，请勿滥用
+    ctx._cstate = cstate;
+
     // 因为存在代理，url 中的路径将有可能被更改
     const originUrl = ctx.request.url;
     debugIO(`[${stores.id}] request: ${JSON.stringify(ctx.request.toJSON())}`);
