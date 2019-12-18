@@ -29,6 +29,12 @@ web 方式：
 }
 ```
 
+### 查看 stores 变更日志
+
+在平时调试的时候，如果想要查看 stores 的变更内容，可以通过在 `Local Storage`（devtool 中的 **Application** 选项卡） 中 `debug=stores` 开启调试日志：
+
+![stores logs](https://raw.githubusercontent.com/boycgit/web-image/master/blog20191218144248.png)
+
 ## 如何本地开发？
 
 ### 本地调试

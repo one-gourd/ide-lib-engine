@@ -1,4 +1,7 @@
 import {
+  onSnapshot,
+  onPatch,
+  onAction,
   cast,
   types,
   Instance,
@@ -11,6 +14,8 @@ import {
   getSubAppsFromFactoryMap,
   getSubStoresAssigner
 } from 'ide-lib-base-component';
+
+import { Debug } from 'ide-lib-utils';
 
 import { createEmptyModel } from './util';
 
@@ -127,6 +132,30 @@ export function StoresFactory<ISubProps>(
       clients: subClients
     }
   );
+
+  /* ----------------------------------------------------
+    用于 debug 时观察 stores 的变更, 通过 DEBUG = stores 开启
+  ----------------------------------------------------- */
+  if (Debug.enabled('stores')) {
+    // 监听 stores 的变化，方便调试
+    const consoleStyle = (color: string = '#bada55') =>
+      `background: #444; color: ${color}; padding: 1px; border-radius:2px`;
+    onSnapshot(stores, newSnapshot => {
+      console.log('%c[Stores]Got new state: %O', consoleStyle(), newSnapshot);
+    });
+
+    onPatch(stores, patch => {
+      console.log('%c[Stores]Got change: %O', consoleStyle('#F4E55A'), patch);
+    });
+
+    onAction(stores, call => {
+      console.log(
+        '%c[Stores]Action was called:  %O',
+        consoleStyle('#F48D33'),
+        call
+      );
+    });
+  }
 
   return {
     stores,
